@@ -25,7 +25,7 @@ Sample3DSceneRenderer::Sample3DSceneRenderer(const std::shared_ptr<DX::DeviceRes
 	static const XMVECTORF32 eye = { 0.0f, 0.0f, -1.5f, 0.0f };
 	static const XMVECTORF32 at = { 0.0f, 0.0f, 0.0f, 0.0f };
 	static const XMVECTORF32 up = { 0.0f, 1.0f, 0.0f, 0.0f };
-	XMStoreFloat4x4(&camera, XMMatrixLookAtRH(eye, at, up));
+	XMStoreFloat4x4(&camera, XMMatrixInverse(0, XMMatrixLookAtLH(eye, at, up)));
 	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixInverse(0, XMMatrixLookAtRH(eye, at, up))));
 
 	///
@@ -52,7 +52,7 @@ void Sample3DSceneRenderer::CreateWindowSizeDependentResources()
 	// this transform should not be applied.
 
 	// This sample makes use of a right-handed coordinate system using row-major matrices.
-	XMMATRIX perspectiveMatrix = XMMatrixPerspectiveFovRH(
+	XMMATRIX perspectiveMatrix = XMMatrixPerspectiveFovLH(
 		fovAngleY,
 		aspectRatio,
 		0.01f,
@@ -69,11 +69,12 @@ void Sample3DSceneRenderer::CreateWindowSizeDependentResources()
 		);
 
 	// Eye is at (0,0.7,1.5), looking at point (0,-0.1,0) with the up-vector along the y-axis.
-	//static const XMVECTORF32 eye = { 0.0f, 0.7f, 1.5f, 0.0f };
-	//static const XMVECTORF32 at = { 0.0f, -0.1f, 0.0f, 0.0f };
-	//static const XMVECTORF32 up = { 0.0f, 1.0f, 0.0f, 0.0f };
+	static const XMVECTORF32 eye = { 0.0f, 0.7f, -1.5f, 0.0f };
+	static const XMVECTORF32 at = { 0.0f, 0.0f, 0.0f, 0.0f };
+	static const XMVECTORF32 up = { 0.0f, 1.0f, 0.0f, 0.0f };
 
-	//XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixLookAtRH(eye, at, up)));
+	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixLookAtLH(eye, at, up)));
+
 }
 
 ///
@@ -110,7 +111,7 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 
 	if (buttons['W'])
 	{
-		newcamera.r[3] = newcamera.r[3] + newcamera.r[2] * -timer.GetElapsedSeconds() * 5.0;
+		newcamera.r[3] = newcamera.r[3] + newcamera.r[2] * timer.GetElapsedSeconds() * 5.0;
 	}
 
 	if (a_down)
@@ -120,7 +121,7 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 
 	if (s_down)
 	{
-		newcamera.r[3] = newcamera.r[3] + newcamera.r[2] * timer.GetElapsedSeconds() * 5.0;
+		newcamera.r[3] = newcamera.r[3] + newcamera.r[2] * -timer.GetElapsedSeconds() * 5.0;
 	}
 
 	if (d_down)
@@ -141,7 +142,7 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 			XMFLOAT4 vector = { 0, 0, 0, 1 };
 			XMVECTOR pos = newcamera.r[3];
 			newcamera.r[3] = XMLoadFloat4(&vector);
-			newcamera = XMMatrixRotationX(-diffy*0.01f) * newcamera * XMMatrixRotationY(-diffx*0.01f);
+			newcamera = XMMatrixRotationX(diffy*0.01f) * newcamera * XMMatrixRotationY(diffx*0.01f);
 			newcamera.r[3] = pos;
 		}
 	}
@@ -153,6 +154,13 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 
 	mouse_move = false;/*Reset*/
 	///
+
+	///
+	m_constantBufferData_Pyramid = m_constantBufferData;
+	//m_constantBufferData_Pyramid.model = ? ? ;
+	XMStoreFloat4x4(&m_constantBufferData_Pyramid.model, XMMatrixTranspose(XMMatrixTranslation(-5.0f, 0.0f, 0.0f)));
+	///
+
 }
 
 // Rotate the 3D cube model a set amount of radians.
@@ -241,6 +249,7 @@ void Sample3DSceneRenderer::Render()
 		nullptr
 		);
 
+
 	// Attach our pixel shader.
 	context->PSSetShader(
 		m_pixelShader.Get(),
@@ -254,6 +263,59 @@ void Sample3DSceneRenderer::Render()
 		0,
 		0
 		);
+
+	///
+	//Start of Draw a Pyramid
+	// Prepare the constant buffer to send it to the graphics device.
+	context->UpdateSubresource1(
+		m_constantBuffer.Get(),
+		0,
+		NULL,
+		&m_constantBufferData_Pyramid,
+		0,
+		0,
+		0
+	);
+
+
+	context->IASetVertexBuffers(
+		0,
+		1,
+		m_vertexBuffer_Pyramid.GetAddressOf(),
+		&stride,
+		&offset
+	);
+
+	context->IASetIndexBuffer(
+		m_indexBuffer_Pyramid.Get(),
+		DXGI_FORMAT_R16_UINT, // Each index is one 16-bit unsigned integer (short).
+		0
+	);
+
+	context->IASetInputLayout(m_inputLayout.Get());
+
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	context->VSSetShader(
+		m_vertexShader.Get(),
+		nullptr,
+		0
+		);
+
+	context->PSSetShader(
+		m_pixelShader.Get(),
+		nullptr,
+		0
+	);
+
+	context->DrawIndexed(
+		m_indexCount_Pyramid,
+		0,
+		0
+	);
+	//End of draw Pyramid
+	///
+
 }
 
 void Sample3DSceneRenderer::CreateDeviceDependentResources()
@@ -348,46 +410,24 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 		// first triangle of this mesh.
 		static const unsigned short cubeIndices [] =
 		{
-			0,2,1, // -x
-			1,2,3,
-
-			4,5,6, // +x
-			5,7,6,
-
-			0,1,5, // -y
-			0,5,4,
-
-			2,6,7, // +y
-			2,7,3,
-
-			0,4,6, // -z
-			0,6,2,
-
-			1,3,7, // +z
-			1,7,5,
-		};
-
-		///
-		static const unsigned short pyramidIndices[] =
-		{
-			//bottom face
-			0,1,2,
+			0,1,2, // -x
 			1,3,2,
 
-			//left face
-			0,5,2,
+			4,6,5, // +x
+			5,6,7,
 
-			//right face
-			1,5,3,
+			0,5,1, // -y
+			0,4,5,
 
-			//front face
-			2,5,3,
+			2,7,6, // +y
+			2,3,7,
 
-			//back face
-			0,5,1,
+			0,6,4, // -z
+			0,2,6,
 
+			1,7,3, // +z
+			1,5,7,
 		};
-		///
 
 		m_indexCount = ARRAYSIZE(cubeIndices);
 
@@ -405,10 +445,87 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 			);
 	});
 
+
 	// Once the cube is loaded, the object is ready to be rendered.
 	createCubeTask.then([this] () {
 		m_loadingComplete = true;
 	});
+
+
+	///
+	/////////////////////////////PYRAMID//////////////////////////////
+
+		// Load mesh vertices. Each vertex has a position and a color.
+		static const VertexPositionColor PyramidVertices[] =
+		{
+			{ XMFLOAT3(-0.5f, -1.0f, 0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
+			{ XMFLOAT3(0.5f, -1.0f,  0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f) },
+			{ XMFLOAT3(-0.5f,  -1.0f, -0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f) },
+			{ XMFLOAT3(0.5f,  -1.0f,  -0.5f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+			{ XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, 1.0f) }
+		};
+
+
+		D3D11_SUBRESOURCE_DATA vertexBufferData_Pyramid = { 0 };
+		vertexBufferData_Pyramid.pSysMem = PyramidVertices;
+		vertexBufferData_Pyramid.SysMemPitch = 0;
+		vertexBufferData_Pyramid.SysMemSlicePitch = 0;
+
+		CD3D11_BUFFER_DESC vertexBufferDesc_Pyramid(sizeof(PyramidVertices), D3D11_BIND_VERTEX_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&vertexBufferDesc_Pyramid,
+				&vertexBufferData_Pyramid,
+				&m_vertexBuffer_Pyramid
+			)
+		);
+
+
+		static const unsigned short pyramidIndices[] =
+		{
+			//bottom face
+			2,1,0, 
+			1,2,3, 
+
+			//left face
+			0,4,2,
+
+			//right face
+			1,3,4,
+
+			//front face
+			3,2,4,
+
+			//back face
+			0,1,4,
+
+		};
+
+		m_indexCount_Pyramid = ARRAYSIZE(pyramidIndices);
+
+
+		D3D11_SUBRESOURCE_DATA indexBufferData_Pyramid = { 0 };
+		indexBufferData_Pyramid.pSysMem = pyramidIndices;
+		indexBufferData_Pyramid.SysMemPitch = 0;
+		indexBufferData_Pyramid.SysMemSlicePitch = 0;
+
+		CD3D11_BUFFER_DESC indexBufferDesc_Pyramid(sizeof(pyramidIndices), D3D11_BIND_INDEX_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&indexBufferDesc_Pyramid,
+				&indexBufferData_Pyramid,
+				&m_indexBuffer_Pyramid
+			)
+		);
+
+
+	///////////////////////////LOADING MODEL///////////////////////////
+		std::vector<VertexPositionUVNORMAL> vertices;
+		std::vector<unsigned int> indices;
+		bool res = LoadOBJModel("test4obj.obj", vertices, indices);
+		//vertices.data();
+
+	///
 }
 
 void Sample3DSceneRenderer::ReleaseDeviceDependentResources()
@@ -420,4 +537,106 @@ void Sample3DSceneRenderer::ReleaseDeviceDependentResources()
 	m_constantBuffer.Reset();
 	m_vertexBuffer.Reset();
 	m_indexBuffer.Reset();
+
+	
+}
+
+bool Sample3DSceneRenderer::LoadOBJModel(const char* path, std::vector <VertexPositionUVNORMAL> &out_verts,std::vector <unsigned int> &out_indices)
+{
+	//Temp variables to store obj data
+	std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
+	std::vector<XMFLOAT3> temp_vertices;
+	std::vector<XMFLOAT2> temp_uvs;
+	std::vector<XMFLOAT3> temp_normals;
+
+	//Try to open the file
+	FILE* file = fopen(path, "r");
+	if (file == NULL)
+	{
+		printf("Can not open the file. \n");
+		return false;
+	}
+
+	//Read the file
+	while (true)
+	{
+		char lineHeader[128];
+		int res = fscanf(file, "%s", lineHeader);
+		if (res == EOF)
+		{
+			//End of the file exit the loop
+			break;
+		}
+		else
+		{
+			if (strcmp(lineHeader, "v") == 0)
+			{
+				XMFLOAT3 vertex;
+				fscanf(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+				temp_vertices.push_back(vertex);
+			}
+			else if(strcmp(lineHeader, "vt") == 0)
+			{
+				XMFLOAT2 uv;
+				fscanf(file, "%f %f\n", &uv.x, &uv.y);
+				temp_uvs.push_back(uv);
+			}
+			else if (strcmp(lineHeader, "vn") == 0)
+			{
+				XMFLOAT3 normal;
+				fscanf(file, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
+				temp_normals.push_back(normal);
+			}
+			else if (strcmp(lineHeader, "f") == 0)
+			{
+				std::string vertex1, vertex2, vertex3;
+				unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
+				int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0],
+					&uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1],
+					&vertexIndex[2], &uvIndex[2], &normalIndex[2]);
+
+				if (matches != 9)
+				{
+					printf("File can't be read by parser");
+					return false;
+				}
+
+				//push-back all found data
+				vertexIndices.push_back(vertexIndex[0]);
+				vertexIndices.push_back(vertexIndex[1]);
+				vertexIndices.push_back(vertexIndex[2]);
+
+				uvIndices.push_back(uvIndex[0]);
+				uvIndices.push_back(uvIndex[1]);
+				uvIndices.push_back(uvIndex[2]);
+
+				normalIndices.push_back(normalIndex[0]);
+				normalIndices.push_back(normalIndex[1]);
+				normalIndices.push_back(normalIndex[2]);
+
+				return true;
+
+			}
+		}
+
+	}
+
+	//filling in input-parameters
+	for (unsigned int i = 0; i < vertexIndices.size(); i++)
+	{
+		unsigned int vertexIndex = vertexIndices[i];
+		unsigned int uvIndex = uvIndices[i];
+		unsigned int normalIndex = normalIndices[i];
+		XMFLOAT3 vertex = temp_vertices[vertexIndex - 1];
+		XMFLOAT2 uv = temp_uvs[uvIndex - 1];
+		XMFLOAT3 normal = temp_normals[normalIndex - 1];
+
+		VertexPositionUVNORMAL temp;
+		temp.pos = vertex;
+		temp.uv = uv;
+		temp.normal = normal;
+		out_verts.push_back(temp);
+		out_indices.push_back(i);
+	}
+
 }

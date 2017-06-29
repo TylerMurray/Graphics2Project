@@ -25,6 +25,12 @@ namespace App7
 		void TrackingUpdate(float positionX);
 		void StopTracking();
 		bool IsTracking() { return m_tracking; }
+		
+		///
+		bool LoadOBJModel(const char* path, std::vector <VertexPositionUVNORMAL> &out_verts, std::vector <unsigned int> &out_indices);
+
+
+		///
 
 
 	private:
@@ -46,6 +52,7 @@ namespace App7
 		ModelViewProjectionConstantBuffer	m_constantBufferData;
 		uint32	m_indexCount;
 
+
 		// Variables used with the rendering loop.
 		bool	m_loadingComplete;
 		float	m_degreesPerSecond;
@@ -53,6 +60,17 @@ namespace App7
 
 		///
 		XMFLOAT4X4 world, camera, proj;
+		///
+
+		///
+		// Direct3D resources for cube geometry.
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_Pyramid;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer_Pyramid;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer_Pyramid;
+		//System resources for Pyramid
+		ModelViewProjectionConstantBuffer m_constantBufferData_Pyramid;
+		uint32 m_indexCount_Pyramid;
+
 		///
 	};
 }

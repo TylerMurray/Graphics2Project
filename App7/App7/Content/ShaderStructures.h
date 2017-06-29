@@ -16,4 +16,12 @@ namespace App7
 		DirectX::XMFLOAT3 pos;
 		DirectX::XMFLOAT3 color;
 	};
+
+	struct VertexPositionUVNORMAL
+	{
+		DirectX::XMFLOAT3 pos;
+		DirectX::XMFLOAT2 uv;
+		DirectX::XMFLOAT3 normal;
+
+	};
 }
