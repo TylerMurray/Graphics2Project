@@ -159,6 +159,9 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 	m_constantBufferData_Pyramid = m_constantBufferData;
 	//m_constantBufferData_Pyramid.model = ? ? ;
 	XMStoreFloat4x4(&m_constantBufferData_Pyramid.model, XMMatrixTranspose(XMMatrixTranslation(-5.0f, 0.0f, 0.0f)));
+
+	m_constantBufferData_objModel = m_constantBufferData;
+	XMStoreFloat4x4(&m_constantBufferData_objModel.model, XMMatrixTranspose(XMMatrixTranslation(5.0f, 0.0f, 0.0f)));
 	///
 
 }
@@ -314,6 +317,57 @@ void Sample3DSceneRenderer::Render()
 		0
 	);
 	//End of draw Pyramid
+
+	//Start of objModel
+	context->UpdateSubresource1(
+		m_constantBuffer_objModel.Get(),
+		0,
+		NULL,
+		&m_constantBufferData_objModel,
+		0,
+		0,
+		0
+	);
+
+
+	context->IASetVertexBuffers(
+		0,
+		1,
+		m_vertexBuffer_objModel.GetAddressOf(),
+		&stride,
+		&offset
+	);
+
+	context->IASetIndexBuffer(
+		m_indexBuffer_objModel.Get(),
+		DXGI_FORMAT_R16_UINT, // Each index is one 16-bit unsigned integer (short).
+		0
+	);
+
+	context->IASetInputLayout(m_inputLayout_objModel.Get());
+
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	context->VSSetShader(
+		m_vertexShader_objModel.Get(),
+		nullptr,
+		0
+	);
+
+	context->PSSetShader(
+		m_pixelShader_objModel.Get(),
+		nullptr,
+		0
+	);
+
+	context->DrawIndexed(
+		m_indexCount_objModel,
+		0,
+		0
+	);
+	//End of objModel
+
+
 	///
 
 }
@@ -519,11 +573,105 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 		);
 
 
-	///////////////////////////LOADING MODEL///////////////////////////
+	///////////////////////////START OF OBJ MODEL///////////////////////////
+
+		//Load in obj file and get info//
 		std::vector<VertexPositionUVNORMAL> vertices;
 		std::vector<unsigned int> indices;
-		bool res = LoadOBJModel("test4obj.obj", vertices, indices);
-		//vertices.data();
+		bool res = LoadOBJModel("VendingMachine.obj", vertices, indices);
+		m_indexCount_objModel = indices.size();
+
+		
+
+		//Shaders and buffers setup//
+
+		// Load shaders asynchronously.
+		auto loadVSTask1 = DX::ReadDataAsync(L"VertexShaderPosUVNormal.cso");
+		auto loadPSTask1 = DX::ReadDataAsync(L"PixelShaderPosUVNormal.cso");
+
+		// After the vertex shader file is loaded, create the shader and input layout.
+		auto createVSTask1 = loadVSTask1.then([this](const std::vector<byte>& fileData) {
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateVertexShader(
+					&fileData[0],
+					fileData.size(),
+					nullptr,
+					&m_vertexShader_objModel
+				)
+			);
+
+			static const D3D11_INPUT_ELEMENT_DESC vertexDesc_objModel[] =
+			{
+				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+
+			};
+
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateInputLayout(
+					vertexDesc_objModel,
+					ARRAYSIZE(vertexDesc_objModel),
+					&fileData[0],
+					fileData.size(),
+					&m_inputLayout_objModel
+				)
+			);
+		});
+
+		// After the pixel shader file is loaded, create the shader and constant buffer.
+		auto createPSTask1 = loadPSTask1.then([this](const std::vector<byte>& fileData) {
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreatePixelShader(
+					&fileData[0],
+					fileData.size(),
+					nullptr,
+					&m_pixelShader_objModel
+				)
+			);
+
+			CD3D11_BUFFER_DESC constantBufferDesc_objModel(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&constantBufferDesc_objModel,
+					nullptr,
+					&m_constantBuffer_objModel
+				)
+			);
+		});
+
+
+		//Data setup//
+		D3D11_SUBRESOURCE_DATA vertexBufferData_objModel = { 0 };
+		vertexBufferData_Pyramid.pSysMem = vertices.data();
+		vertexBufferData_Pyramid.SysMemPitch = 0;
+		vertexBufferData_Pyramid.SysMemSlicePitch = 0;
+
+		CD3D11_BUFFER_DESC vertexBufferDesc_objModel(sizeof(vertices), D3D11_BIND_VERTEX_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&vertexBufferDesc_objModel,
+				&vertexBufferData_objModel,
+				&m_vertexBuffer_objModel
+			)
+		);
+
+		D3D11_SUBRESOURCE_DATA indexBufferData_objModel = { 0 };
+		indexBufferData_Pyramid.pSysMem = indices.data();
+		indexBufferData_Pyramid.SysMemPitch = 0;
+		indexBufferData_Pyramid.SysMemSlicePitch = 0;
+
+		CD3D11_BUFFER_DESC indexBufferDesc_objModel(sizeof(indices), D3D11_BIND_INDEX_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&indexBufferDesc_objModel,
+				&indexBufferData_objModel,
+				&m_indexBuffer_objModel
+			)
+		);
+//////////////////////////END OF OBJ MODEL/////////////////////////////////
+
+
 
 	///
 }
@@ -550,7 +698,8 @@ bool Sample3DSceneRenderer::LoadOBJModel(const char* path, std::vector <VertexPo
 	std::vector<XMFLOAT3> temp_normals;
 
 	//Try to open the file
-	FILE* file = fopen(path, "r");
+	FILE* file;
+	fopen_s(&file, path, "r");
 	if (file == NULL)
 	{
 		printf("Can not open the file. \n");
@@ -561,7 +710,7 @@ bool Sample3DSceneRenderer::LoadOBJModel(const char* path, std::vector <VertexPo
 	while (true)
 	{
 		char lineHeader[128];
-		int res = fscanf(file, "%s", lineHeader);
+		int res = fscanf_s(file, "%s", lineHeader);
 		if (res == EOF)
 		{
 			//End of the file exit the loop
@@ -572,26 +721,26 @@ bool Sample3DSceneRenderer::LoadOBJModel(const char* path, std::vector <VertexPo
 			if (strcmp(lineHeader, "v") == 0)
 			{
 				XMFLOAT3 vertex;
-				fscanf(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+				fscanf_s(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
 				temp_vertices.push_back(vertex);
 			}
 			else if(strcmp(lineHeader, "vt") == 0)
 			{
 				XMFLOAT2 uv;
-				fscanf(file, "%f %f\n", &uv.x, &uv.y);
+				fscanf_s(file, "%f %f\n", &uv.x, &uv.y);
 				temp_uvs.push_back(uv);
 			}
 			else if (strcmp(lineHeader, "vn") == 0)
 			{
 				XMFLOAT3 normal;
-				fscanf(file, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
+				fscanf_s(file, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
 				temp_normals.push_back(normal);
 			}
 			else if (strcmp(lineHeader, "f") == 0)
 			{
 				std::string vertex1, vertex2, vertex3;
 				unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
-				int matches = fscanf(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0],
+				int matches = fscanf_s(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0],
 					&uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1],
 					&vertexIndex[2], &uvIndex[2], &normalIndex[2]);
 
@@ -614,7 +763,6 @@ bool Sample3DSceneRenderer::LoadOBJModel(const char* path, std::vector <VertexPo
 				normalIndices.push_back(normalIndex[1]);
 				normalIndices.push_back(normalIndex[2]);
 
-				return true;
 
 			}
 		}
@@ -638,5 +786,7 @@ bool Sample3DSceneRenderer::LoadOBJModel(const char* path, std::vector <VertexPo
 		out_verts.push_back(temp);
 		out_indices.push_back(i);
 	}
+
+	return true;
 
 }

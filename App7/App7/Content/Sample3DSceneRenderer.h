@@ -6,6 +6,7 @@
 
 ///
 #include <DirectXMath.h>
+#include <vector>
 using namespace DirectX;
 ///
 
@@ -63,7 +64,7 @@ namespace App7
 		///
 
 		///
-		// Direct3D resources for cube geometry.
+		// Direct3D resources for Pyramid geometry.
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_Pyramid;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer_Pyramid;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer_Pyramid;
@@ -71,6 +72,20 @@ namespace App7
 		ModelViewProjectionConstantBuffer m_constantBufferData_Pyramid;
 		uint32 m_indexCount_Pyramid;
 
+
+
+		//Direct3D resources for .obj loaded model
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_objModel;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer_objModel;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer_objModel;
+
+		Microsoft::WRL::ComPtr<ID3D11InputLayout>	m_inputLayout_objModel;
+		Microsoft::WRL::ComPtr<ID3D11VertexShader>	m_vertexShader_objModel;
+		Microsoft::WRL::ComPtr<ID3D11PixelShader>	m_pixelShader_objModel;
+
+		//System resources for .obj loaded model
+		ModelViewProjectionConstantBuffer m_constantBufferData_objModel;
+		uint32 m_indexCount_objModel;
 		///
 	};
 }
