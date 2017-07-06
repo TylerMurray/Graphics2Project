@@ -578,97 +578,105 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 		//Load in obj file and get info//
 		std::vector<VertexPositionUVNORMAL> vertices;
 		std::vector<unsigned int> indices;
-		bool res = LoadOBJModel("VendingMachine.obj", vertices, indices);
+		//bool res = LoadOBJModel("VendingMachine.obj", vertices, indices);
+		//bool res = LoadOBJModel("./VendingMachine.obj", vertices, indices);
+		//bool res = LoadOBJModel("test.txt", vertices, indices);
+		//bool res = LoadOBJModel("C:\\Users\\Tyler\\Desktop\\Graphics2PROJECT\\Graphics2Project\\App7\\App7\\VendingMachine.obj", vertices, indices);
+		bool res = LoadOBJModel("C:\\Users\\Tyler\\Desktop\\Graphics2PROJECT\\Graphics2Project\\App7\\App7\\test.txt", vertices, indices);
+
+
 		m_indexCount_objModel = indices.size();
 
 		
 
 		//Shaders and buffers setup//
+		if (res == true)
+		{
+			// Load shaders asynchronously.
+			auto loadVSTask1 = DX::ReadDataAsync(L"VertexShaderPosUVNormal.cso");
+			auto loadPSTask1 = DX::ReadDataAsync(L"PixelShaderPosUVNormal.cso");
 
-		// Load shaders asynchronously.
-		auto loadVSTask1 = DX::ReadDataAsync(L"VertexShaderPosUVNormal.cso");
-		auto loadPSTask1 = DX::ReadDataAsync(L"PixelShaderPosUVNormal.cso");
+			// After the vertex shader file is loaded, create the shader and input layout.
+			auto createVSTask1 = loadVSTask1.then([this](const std::vector<byte>& fileData) {
+				DX::ThrowIfFailed(
+					m_deviceResources->GetD3DDevice()->CreateVertexShader(
+						&fileData[0],
+						fileData.size(),
+						nullptr,
+						&m_vertexShader_objModel
+					)
+				);
 
-		// After the vertex shader file is loaded, create the shader and input layout.
-		auto createVSTask1 = loadVSTask1.then([this](const std::vector<byte>& fileData) {
-			DX::ThrowIfFailed(
-				m_deviceResources->GetD3DDevice()->CreateVertexShader(
-					&fileData[0],
-					fileData.size(),
-					nullptr,
-					&m_vertexShader_objModel
-				)
-			);
+				static const D3D11_INPUT_ELEMENT_DESC vertexDesc_objModel[] =
+				{
+					{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+					{ "UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+					{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
 
-			static const D3D11_INPUT_ELEMENT_DESC vertexDesc_objModel[] =
-			{
-				{ "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "UV", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
-				{ "NORMAL", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+				};
 
-			};
+				DX::ThrowIfFailed(
+					m_deviceResources->GetD3DDevice()->CreateInputLayout(
+						vertexDesc_objModel,
+						ARRAYSIZE(vertexDesc_objModel),
+						&fileData[0],
+						fileData.size(),
+						&m_inputLayout_objModel
+					)
+				);
+			});
 
-			DX::ThrowIfFailed(
-				m_deviceResources->GetD3DDevice()->CreateInputLayout(
-					vertexDesc_objModel,
-					ARRAYSIZE(vertexDesc_objModel),
-					&fileData[0],
-					fileData.size(),
-					&m_inputLayout_objModel
-				)
-			);
-		});
+			// After the pixel shader file is loaded, create the shader and constant buffer.
+			auto createPSTask1 = loadPSTask1.then([this](const std::vector<byte>& fileData) {
+				DX::ThrowIfFailed(
+					m_deviceResources->GetD3DDevice()->CreatePixelShader(
+						&fileData[0],
+						fileData.size(),
+						nullptr,
+						&m_pixelShader_objModel
+					)
+				);
 
-		// After the pixel shader file is loaded, create the shader and constant buffer.
-		auto createPSTask1 = loadPSTask1.then([this](const std::vector<byte>& fileData) {
-			DX::ThrowIfFailed(
-				m_deviceResources->GetD3DDevice()->CreatePixelShader(
-					&fileData[0],
-					fileData.size(),
-					nullptr,
-					&m_pixelShader_objModel
-				)
-			);
+				CD3D11_BUFFER_DESC constantBufferDesc_objModel(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+				DX::ThrowIfFailed(
+					m_deviceResources->GetD3DDevice()->CreateBuffer(
+						&constantBufferDesc_objModel,
+						nullptr,
+						&m_constantBuffer_objModel
+					)
+				);
+			});
 
-			CD3D11_BUFFER_DESC constantBufferDesc_objModel(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+
+			//Data setup//
+			D3D11_SUBRESOURCE_DATA vertexBufferData_objModel = { 0 };
+			vertexBufferData_Pyramid.pSysMem = vertices.data();
+			vertexBufferData_Pyramid.SysMemPitch = 0;
+			vertexBufferData_Pyramid.SysMemSlicePitch = 0;
+
+			CD3D11_BUFFER_DESC vertexBufferDesc_objModel(sizeof(vertices), D3D11_BIND_VERTEX_BUFFER);
 			DX::ThrowIfFailed(
 				m_deviceResources->GetD3DDevice()->CreateBuffer(
-					&constantBufferDesc_objModel,
-					nullptr,
-					&m_constantBuffer_objModel
+					&vertexBufferDesc_objModel,
+					&vertexBufferData_objModel,
+					&m_vertexBuffer_objModel
 				)
 			);
-		});
 
+			D3D11_SUBRESOURCE_DATA indexBufferData_objModel = { 0 };
+			indexBufferData_Pyramid.pSysMem = indices.data();
+			indexBufferData_Pyramid.SysMemPitch = 0;
+			indexBufferData_Pyramid.SysMemSlicePitch = 0;
 
-		//Data setup//
-		D3D11_SUBRESOURCE_DATA vertexBufferData_objModel = { 0 };
-		vertexBufferData_Pyramid.pSysMem = vertices.data();
-		vertexBufferData_Pyramid.SysMemPitch = 0;
-		vertexBufferData_Pyramid.SysMemSlicePitch = 0;
-
-		CD3D11_BUFFER_DESC vertexBufferDesc_objModel(sizeof(vertices), D3D11_BIND_VERTEX_BUFFER);
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateBuffer(
-				&vertexBufferDesc_objModel,
-				&vertexBufferData_objModel,
-				&m_vertexBuffer_objModel
-			)
-		);
-
-		D3D11_SUBRESOURCE_DATA indexBufferData_objModel = { 0 };
-		indexBufferData_Pyramid.pSysMem = indices.data();
-		indexBufferData_Pyramid.SysMemPitch = 0;
-		indexBufferData_Pyramid.SysMemSlicePitch = 0;
-
-		CD3D11_BUFFER_DESC indexBufferDesc_objModel(sizeof(indices), D3D11_BIND_INDEX_BUFFER);
-		DX::ThrowIfFailed(
-			m_deviceResources->GetD3DDevice()->CreateBuffer(
-				&indexBufferDesc_objModel,
-				&indexBufferData_objModel,
-				&m_indexBuffer_objModel
-			)
-		);
+			CD3D11_BUFFER_DESC indexBufferDesc_objModel(sizeof(indices), D3D11_BIND_INDEX_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&indexBufferDesc_objModel,
+					&indexBufferData_objModel,
+					&m_indexBuffer_objModel
+				)
+			);
+		}
 //////////////////////////END OF OBJ MODEL/////////////////////////////////
 
 
@@ -698,10 +706,19 @@ bool Sample3DSceneRenderer::LoadOBJModel(const char* path, std::vector <VertexPo
 	std::vector<XMFLOAT3> temp_normals;
 
 	//Try to open the file
+	//FILE* file = fopen(path, "r");
 	FILE* file;
-	fopen_s(&file, path, "r");
+	errno_t error;
+	error = fopen_s(&file, path, "r");
+	
+	///LOOK at value of error
+	// 2 = No such file or directory (FROM: Just filename)
+	// 13 = Permission denied (FROM: direct path)
+	//error = fopen_s(&file, "C:\\Users\\Tyler\\Desktop\\Graphics2PROJECT\\Graphics2Project\\App7\\App7\\VendingMachine.obj", "r");
+
 	if (file == NULL)
 	{
+		//perror("Can't open file");
 		printf("Can not open the file. \n");
 		return false;
 	}
@@ -787,6 +804,36 @@ bool Sample3DSceneRenderer::LoadOBJModel(const char* path, std::vector <VertexPo
 		out_indices.push_back(i);
 	}
 
+	fclose(file);
 	return true;
+
+}
+
+void Sample3DSceneRender::LoadTexture(unsigned int* pixels, unsigned int numlevels, unsigned int* leveloffsets, unsigned int width, unsigned int height, ID3D11Device* d3dDevice, ID3D11Texture2D* diffuseTexture)
+{
+	D3D11_TEXTURE2D_DESC texDesc;
+	D3D11_SUBRESOURCE_DATA texSrc[numlevels];
+	ZeroMemory(&texDesc, sizeof(texDesc));
+
+	for (int i = 0; i < numlevels; i++)
+	{
+		ZeroMemory(&texSrc[i], sizeof(texSrc[i]));
+		texSrc[i].pSysMem = &pixels[leveloffsets[i]];
+		texSrc[i].SysMemPitch = (width >> i) * sizeof(unsigned int);
+
+	}
+
+	texDesc.ArraySize = 1;
+	texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
+	texDesc.CPUAccessFlags = 0;
+	texDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM; //Format should match texture format
+	texDesc.Height = height;
+	texDesc.Width = width;
+	texDesc.MipLevels = numlevels;
+	texDesc.Usage = D3D11_USAGE_IMMUTABLE;
+	texDesc.SampleDesc.Count = 1;
+
+	HRESULT result = d3dDevice->CreateTexture2D(&texDesc, texSrc, &diffuseTexture);
+
 
 }

@@ -5,6 +5,7 @@
 #include "..\Common\StepTimer.h"
 
 ///
+#include "DDSTextureLoader.h"
 #include <DirectXMath.h>
 #include <vector>
 using namespace DirectX;
@@ -87,6 +88,15 @@ namespace App7
 		ModelViewProjectionConstantBuffer m_constantBufferData_objModel;
 		uint32 m_indexCount_objModel;
 		///
+
+
+		///
+		//Texture Variables
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> diffuseTexture;
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> environmentTexture;
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> environmentView;
+
+		////
 	};
 }
 
