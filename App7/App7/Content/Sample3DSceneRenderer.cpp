@@ -7,6 +7,7 @@ using namespace App7;
 
 using namespace DirectX;
 using namespace Windows::Foundation;
+using namespace Microsoft::WRL; 
 
 // Loads vertex and pixel shaders from files and instantiates the cube geometry.
 Sample3DSceneRenderer::Sample3DSceneRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
@@ -360,6 +361,9 @@ void Sample3DSceneRenderer::Render()
 		0
 	);
 
+	ID3D11ShaderResourceView* texViews[] = { environmentView };
+	context->PSSetShaderResources(0, 1, texViews);
+
 	context->DrawIndexed(
 		m_indexCount_objModel,
 		0,
@@ -679,6 +683,12 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 		}
 //////////////////////////END OF OBJ MODEL/////////////////////////////////
 
+/////////////////////////Start of Texture Model/////////////////////////////////////
+
+		HRESULT result = CreateDDsTextureFromFile(d3dDevice,
+			                                      L"T_vendMachine_D.dds",
+			                                     (ID3D11Resource**)&environmentTexture,
+			                                     &environmentView);
 
 
 	///
@@ -694,7 +704,28 @@ void Sample3DSceneRenderer::ReleaseDeviceDependentResources()
 	m_vertexBuffer.Reset();
 	m_indexBuffer.Reset();
 
-	
+	///
+	//Reset Pyramid
+	m_vertexBuffer_Pyramid.Reset();
+	m_indexBuffer_Pyramid.Reset();
+	m_constantBuffer_Pyramid.Reset();
+
+	//Reset Model
+	m_vertexBuffer_objModel.Reset();
+	m_indexBuffer_objModel.Reset();
+	m_constantBuffer_objModel.Reset();
+
+	m_inputLayout_objModel.Reset();
+	m_vertexShader_objModel.Reset();
+	m_pixelShader_objModel.Reset();
+
+
+	//Reset texture
+	diffuseTexture.Reset();
+	environmentTexture.Reset();
+	environmentView.Reset();
+
+	///
 }
 
 bool Sample3DSceneRenderer::LoadOBJModel(const char* path, std::vector <VertexPositionUVNORMAL> &out_verts,std::vector <unsigned int> &out_indices)
@@ -809,31 +840,3 @@ bool Sample3DSceneRenderer::LoadOBJModel(const char* path, std::vector <VertexPo
 
 }
 
-void Sample3DSceneRender::LoadTexture(unsigned int* pixels, unsigned int numlevels, unsigned int* leveloffsets, unsigned int width, unsigned int height, ID3D11Device* d3dDevice, ID3D11Texture2D* diffuseTexture)
-{
-	D3D11_TEXTURE2D_DESC texDesc;
-	D3D11_SUBRESOURCE_DATA texSrc[numlevels];
-	ZeroMemory(&texDesc, sizeof(texDesc));
-
-	for (int i = 0; i < numlevels; i++)
-	{
-		ZeroMemory(&texSrc[i], sizeof(texSrc[i]));
-		texSrc[i].pSysMem = &pixels[leveloffsets[i]];
-		texSrc[i].SysMemPitch = (width >> i) * sizeof(unsigned int);
-
-	}
-
-	texDesc.ArraySize = 1;
-	texDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-	texDesc.CPUAccessFlags = 0;
-	texDesc.Format = DXGI_FORMAT_B8G8R8A8_UNORM; //Format should match texture format
-	texDesc.Height = height;
-	texDesc.Width = width;
-	texDesc.MipLevels = numlevels;
-	texDesc.Usage = D3D11_USAGE_IMMUTABLE;
-	texDesc.SampleDesc.Count = 1;
-
-	HRESULT result = d3dDevice->CreateTexture2D(&texDesc, texSrc, &diffuseTexture);
-
-
-}

@@ -92,7 +92,4 @@
       <Filter>Content</Filter>
     </FxCompile>
   </ItemGroup>
-  <ItemGroup>
-    <Text Include="test.txt" />
-  </ItemGroup>
 </Project>

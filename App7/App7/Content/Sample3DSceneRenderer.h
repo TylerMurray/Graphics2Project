@@ -5,6 +5,7 @@
 #include "..\Common\StepTimer.h"
 
 ///
+//#include "purplenebula_up.h"
 #include "DDSTextureLoader.h"
 #include <DirectXMath.h>
 #include <vector>
@@ -95,7 +96,7 @@ namespace App7
 		Microsoft::WRL::ComPtr<ID3D11Texture2D> diffuseTexture;
 		Microsoft::WRL::ComPtr<ID3D11Texture2D> environmentTexture;
 		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> environmentView;
-
+		Microsoft::WRL::ComPtr<ID3D11Device> d3dDevice;
 		////
 	};
 }
