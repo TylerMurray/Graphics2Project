@@ -93,10 +93,11 @@ namespace App7
 
 		///
 		//Texture Variables
-		Microsoft::WRL::ComPtr<ID3D11Texture2D> diffuseTexture;
-		Microsoft::WRL::ComPtr<ID3D11Texture2D> environmentTexture;
-		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> environmentView;
-		Microsoft::WRL::ComPtr<ID3D11Device> d3dDevice;
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> diffuseTexture; //Color data mapped across polygons
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> vendingMachineTexture;
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> vendingMachineView;
+		Microsoft::WRL::ComPtr<ID3D11SamplerState> vendingMachineSampler;
+		//Microsoft::WRL::ComPtr<ID3D11Device> d3dDevice;
 		////
 	};
 }

@@ -8,11 +8,16 @@ struct PixelShaderInput
 {
 	float4 pos : SV_POSITION;
 	float2 uv : UV;
-	float4 normal : NORMAL;
+	float3 normal : NORMAL;
 };
+
+texture2D objTexture : register(t0);
+
+SamplerState filter : register(s0);
 
 // A pass-through function for the (interpolated) color data.
 float4 main(PixelShaderInput input) : SV_TARGET
 {
-	return float4(input.uv, 1.0f, 1.0f);
+	return objTexture.Sample(filter, input.uv);
+
 }

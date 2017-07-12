@@ -1,5 +1,6 @@
 ﻿#include "pch.h"
 #include "Sample3DSceneRenderer.h"
+#include <direct.h>
 
 #include "..\Common\DirectXHelper.h"
 
@@ -8,6 +9,7 @@ using namespace App7;
 using namespace DirectX;
 using namespace Windows::Foundation;
 using namespace Microsoft::WRL; 
+using namespace Windows::Storage;
 
 // Loads vertex and pixel shaders from files and instantiates the cube geometry.
 Sample3DSceneRenderer::Sample3DSceneRenderer(const std::shared_ptr<DX::DeviceResources>& deviceResources) :
@@ -157,12 +159,15 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 	///
 
 	///
+
 	m_constantBufferData_Pyramid = m_constantBufferData;
 	//m_constantBufferData_Pyramid.model = ? ? ;
-	XMStoreFloat4x4(&m_constantBufferData_Pyramid.model, XMMatrixTranspose(XMMatrixTranslation(-5.0f, 0.0f, 0.0f)));
+	XMStoreFloat4x4(&m_constantBufferData_Pyramid.model, XMMatrixTranspose(XMMatrixTranslation(-5.0f, -5.0f, 0.0f)));
 
 	m_constantBufferData_objModel = m_constantBufferData;
 	XMStoreFloat4x4(&m_constantBufferData_objModel.model, XMMatrixTranspose(XMMatrixTranslation(5.0f, 0.0f, 0.0f)));
+	//XMStoreFloat4x4(&m_constantBufferData_objModel.model, XMMatrixTranspose(XMMatrixTranspose(XMMatrixRotationY(1.5708f))));
+
 	///
 
 }
@@ -330,7 +335,7 @@ void Sample3DSceneRenderer::Render()
 		0
 	);
 
-
+	stride = sizeof(VertexPositionUVNORMAL);
 	context->IASetVertexBuffers(
 		0,
 		1,
@@ -341,7 +346,7 @@ void Sample3DSceneRenderer::Render()
 
 	context->IASetIndexBuffer(
 		m_indexBuffer_objModel.Get(),
-		DXGI_FORMAT_R16_UINT, // Each index is one 16-bit unsigned integer (short).
+		DXGI_FORMAT_R32_UINT, // Each index is one 16-bit unsigned integer (short).
 		0
 	);
 
@@ -361,8 +366,9 @@ void Sample3DSceneRenderer::Render()
 		0
 	);
 
-	ID3D11ShaderResourceView* texViews[] = { environmentView };
-	context->PSSetShaderResources(0, 1, texViews);
+	//ID3D11ShaderResourceView* texViews[] = { environmentView };
+	context->PSSetShaderResources(0, 1, vendingMachineView.GetAddressOf());
+	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf());
 
 	context->DrawIndexed(
 		m_indexCount_objModel,
@@ -577,18 +583,14 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 		);
 
 
-	///////////////////////////START OF OBJ MODEL///////////////////////////
+	///////////////////////////START OF Vending Machine OBJ MODEL///////////////////////////
 
 		//Load in obj file and get info//
 		std::vector<VertexPositionUVNORMAL> vertices;
 		std::vector<unsigned int> indices;
-		//bool res = LoadOBJModel("VendingMachine.obj", vertices, indices);
-		//bool res = LoadOBJModel("./VendingMachine.obj", vertices, indices);
-		//bool res = LoadOBJModel("test.txt", vertices, indices);
-		//bool res = LoadOBJModel("C:\\Users\\Tyler\\Desktop\\Graphics2PROJECT\\Graphics2Project\\App7\\App7\\VendingMachine.obj", vertices, indices);
-		bool res = LoadOBJModel("C:\\Users\\Tyler\\Desktop\\Graphics2PROJECT\\Graphics2Project\\App7\\App7\\test.txt", vertices, indices);
 
-
+		bool res = LoadOBJModel("Assets/VendingMachine.obj", vertices, indices);
+	
 		m_indexCount_objModel = indices.size();
 
 		
@@ -654,11 +656,11 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 
 			//Data setup//
 			D3D11_SUBRESOURCE_DATA vertexBufferData_objModel = { 0 };
-			vertexBufferData_Pyramid.pSysMem = vertices.data();
-			vertexBufferData_Pyramid.SysMemPitch = 0;
-			vertexBufferData_Pyramid.SysMemSlicePitch = 0;
+			vertexBufferData_objModel.pSysMem = vertices.data();
+			vertexBufferData_objModel.SysMemPitch = 0;
+			vertexBufferData_objModel.SysMemSlicePitch = 0;
 
-			CD3D11_BUFFER_DESC vertexBufferDesc_objModel(sizeof(vertices), D3D11_BIND_VERTEX_BUFFER);
+			CD3D11_BUFFER_DESC vertexBufferDesc_objModel(sizeof(VertexPositionUVNORMAL) * vertices.size(), D3D11_BIND_VERTEX_BUFFER);
 			DX::ThrowIfFailed(
 				m_deviceResources->GetD3DDevice()->CreateBuffer(
 					&vertexBufferDesc_objModel,
@@ -668,11 +670,11 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 			);
 
 			D3D11_SUBRESOURCE_DATA indexBufferData_objModel = { 0 };
-			indexBufferData_Pyramid.pSysMem = indices.data();
-			indexBufferData_Pyramid.SysMemPitch = 0;
-			indexBufferData_Pyramid.SysMemSlicePitch = 0;
+			indexBufferData_objModel.pSysMem = indices.data();
+			indexBufferData_objModel.SysMemPitch = 0;
+			indexBufferData_objModel.SysMemSlicePitch = 0;
 
-			CD3D11_BUFFER_DESC indexBufferDesc_objModel(sizeof(indices), D3D11_BIND_INDEX_BUFFER);
+			CD3D11_BUFFER_DESC indexBufferDesc_objModel(sizeof(unsigned int) * indices.size(), D3D11_BIND_INDEX_BUFFER);
 			DX::ThrowIfFailed(
 				m_deviceResources->GetD3DDevice()->CreateBuffer(
 					&indexBufferDesc_objModel,
@@ -681,15 +683,28 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 				)
 			);
 		}
-//////////////////////////END OF OBJ MODEL/////////////////////////////////
+		
+		HRESULT result = CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(),
+			                                      L"Assets\\T_vendMachine_D.dds",
+			                                     ((ComPtr<ID3D11Resource>)vendingMachineTexture).GetAddressOf(),
+			                                     vendingMachineView.GetAddressOf());
 
-/////////////////////////Start of Texture Model/////////////////////////////////////
+		D3D11_SAMPLER_DESC sampleDesc;
+		sampleDesc.Filter = D3D11_FILTER_ANISOTROPIC;
+		sampleDesc.AddressU = D3D11_TEXTURE_ADDRESS_WRAP;
+		sampleDesc.AddressV = D3D11_TEXTURE_ADDRESS_WRAP;
+		sampleDesc.AddressW = D3D11_TEXTURE_ADDRESS_WRAP;
+		sampleDesc.MipLODBias = 0;
+		sampleDesc.MaxAnisotropy = 1;
+		sampleDesc.ComparisonFunc = D3D11_COMPARISON_NEVER;
+		sampleDesc.MinLOD = -FLT_MAX;
+		sampleDesc.MaxLOD = FLT_MAX;
 
-		HRESULT result = CreateDDsTextureFromFile(d3dDevice,
-			                                      L"T_vendMachine_D.dds",
-			                                     (ID3D11Resource**)&environmentTexture,
-			                                     &environmentView);
 
+		m_deviceResources->GetD3DDevice()->CreateSamplerState(&sampleDesc, vendingMachineSampler.GetAddressOf());
+		
+
+///////////////////////////////////////End of Vending Machine OBJ Model////////////////////////////////////////////////
 
 	///
 }
@@ -722,9 +737,9 @@ void Sample3DSceneRenderer::ReleaseDeviceDependentResources()
 
 	//Reset texture
 	diffuseTexture.Reset();
-	environmentTexture.Reset();
-	environmentView.Reset();
-
+	vendingMachineTexture.Reset();
+	vendingMachineView.Reset();
+	vendingMachineSampler.Reset();
 	///
 }
 
@@ -736,20 +751,15 @@ bool Sample3DSceneRenderer::LoadOBJModel(const char* path, std::vector <VertexPo
 	std::vector<XMFLOAT2> temp_uvs;
 	std::vector<XMFLOAT3> temp_normals;
 
-	//Try to open the file
-	//FILE* file = fopen(path, "r");
-	FILE* file;
-	errno_t error;
-	error = fopen_s(&file, path, "r");
+	char* curPath;
+	curPath = _getcwd(NULL, 0);
 	
-	///LOOK at value of error
-	// 2 = No such file or directory (FROM: Just filename)
-	// 13 = Permission denied (FROM: direct path)
-	//error = fopen_s(&file, "C:\\Users\\Tyler\\Desktop\\Graphics2PROJECT\\Graphics2Project\\App7\\App7\\VendingMachine.obj", "r");
+
+	//Try to open the file
+	FILE* file = fopen(path, "r");
 
 	if (file == NULL)
 	{
-		//perror("Can't open file");
 		printf("Can not open the file. \n");
 		return false;
 	}
@@ -758,7 +768,7 @@ bool Sample3DSceneRenderer::LoadOBJModel(const char* path, std::vector <VertexPo
 	while (true)
 	{
 		char lineHeader[128];
-		int res = fscanf_s(file, "%s", lineHeader);
+		int res = fscanf_s(file, "%s", lineHeader, 128);
 		if (res == EOF)
 		{
 			//End of the file exit the loop
@@ -770,18 +780,21 @@ bool Sample3DSceneRenderer::LoadOBJModel(const char* path, std::vector <VertexPo
 			{
 				XMFLOAT3 vertex;
 				fscanf_s(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+				vertex.x = -vertex.x;
 				temp_vertices.push_back(vertex);
 			}
 			else if(strcmp(lineHeader, "vt") == 0)
 			{
 				XMFLOAT2 uv;
 				fscanf_s(file, "%f %f\n", &uv.x, &uv.y);
+				uv.y = 1.0f - uv.y;
 				temp_uvs.push_back(uv);
 			}
 			else if (strcmp(lineHeader, "vn") == 0)
 			{
 				XMFLOAT3 normal;
 				fscanf_s(file, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
+				normal.x = -normal.x;
 				temp_normals.push_back(normal);
 			}
 			else if (strcmp(lineHeader, "f") == 0)
@@ -800,16 +813,16 @@ bool Sample3DSceneRenderer::LoadOBJModel(const char* path, std::vector <VertexPo
 
 				//push-back all found data
 				vertexIndices.push_back(vertexIndex[0]);
-				vertexIndices.push_back(vertexIndex[1]);
 				vertexIndices.push_back(vertexIndex[2]);
+				vertexIndices.push_back(vertexIndex[1]);
 
 				uvIndices.push_back(uvIndex[0]);
-				uvIndices.push_back(uvIndex[1]);
 				uvIndices.push_back(uvIndex[2]);
+				uvIndices.push_back(uvIndex[1]);
 
 				normalIndices.push_back(normalIndex[0]);
-				normalIndices.push_back(normalIndex[1]);
 				normalIndices.push_back(normalIndex[2]);
+				normalIndices.push_back(normalIndex[1]);
 
 
 			}

@@ -62,16 +62,24 @@
     <Image Include="Assets\Wide310x150Logo.scale-200.png">
       <Filter>Assets</Filter>
     </Image>
+    <Filter Include="Assets\Models">
+      <UniqueIdentifier>{bf43d3ee-5f32-492e-b1f6-68e571bda7b4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Assets\Textures">
+      <UniqueIdentifier>{596187db-ef2f-472a-918d-46928d27e1ca}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="App.cpp" />
     <ClCompile Include="App7Main.cpp" />
     <ClCompile Include="pch.cpp" />
+    <ClCompile Include="DDSTextureLoader.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />
     <ClInclude Include="App7Main.h" />
     <ClInclude Include="pch.h" />
+    <ClInclude Include="DDSTextureLoader.h" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\StoreLogo.png">
@@ -83,6 +91,12 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App7_TemporaryKey.pfx" />
+    <None Include="Assets\VendingMachine.obj">
+      <Filter>Assets\Models</Filter>
+    </None>
+    <None Include="Assets\T_vendMachine_D.dds">
+      <Filter>Assets\Textures</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Content\VertexShaderPosUVNormal.hlsl">
