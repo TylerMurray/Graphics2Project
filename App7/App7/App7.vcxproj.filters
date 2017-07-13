@@ -97,6 +97,24 @@
     <None Include="Assets\T_vendMachine_D.dds">
       <Filter>Assets\Textures</Filter>
     </None>
+    <None Include="Assets\Xenomorph.obj">
+      <Filter>Assets\Models</Filter>
+    </None>
+    <None Include="Assets\Xenomorph_S.dds">
+      <Filter>Assets\Textures</Filter>
+    </None>
+    <None Include="Assets\barrel.obj">
+      <Filter>Assets\Models</Filter>
+    </None>
+    <None Include="Assets\PropBarrel.dds">
+      <Filter>Assets\Textures</Filter>
+    </None>
+    <None Include="Assets\wolf.obj">
+      <Filter>Assets\Models</Filter>
+    </None>
+    <None Include="Assets\alphaWhiteR.dds">
+      <Filter>Assets\Textures</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Content\VertexShaderPosUVNormal.hlsl">

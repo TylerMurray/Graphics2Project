@@ -24,4 +24,5 @@ namespace App7
 		DirectX::XMFLOAT3 normal;
 
 	};
+
 }

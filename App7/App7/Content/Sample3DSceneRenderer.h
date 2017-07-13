@@ -76,7 +76,7 @@ namespace App7
 
 
 
-		//Direct3D resources for .obj loaded model
+		//Direct3D resources for .obj loaded model VendingMachine
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_objModel;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer_objModel;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer_objModel;
@@ -85,20 +85,53 @@ namespace App7
 		Microsoft::WRL::ComPtr<ID3D11VertexShader>	m_vertexShader_objModel;
 		Microsoft::WRL::ComPtr<ID3D11PixelShader>	m_pixelShader_objModel;
 
-		//System resources for .obj loaded model
+		//System resources for .obj loaded model VendingMachine
 		ModelViewProjectionConstantBuffer m_constantBufferData_objModel;
 		uint32 m_indexCount_objModel;
-		///
-
-
-		///
-		//Texture Variables
+	
+		//Texture Variables VendingMachine
 		Microsoft::WRL::ComPtr<ID3D11Texture2D> diffuseTexture; //Color data mapped across polygons
 		Microsoft::WRL::ComPtr<ID3D11Texture2D> vendingMachineTexture;
 		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> vendingMachineView;
 		Microsoft::WRL::ComPtr<ID3D11SamplerState> vendingMachineSampler;
-		//Microsoft::WRL::ComPtr<ID3D11Device> d3dDevice;
-		////
+		
+		//Lighting VendingMachine
+		
+
+		//wolf
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_wolf;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer_wolf;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer_wolf;
+		ModelViewProjectionConstantBuffer m_constantBufferData_wolf;
+		uint32 m_indexCount_wolf;
+
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> wolfTexture;
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> wolfView;
+		
+
+
+
+		//Alien
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_alien;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer_alien;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer_alien;
+		ModelViewProjectionConstantBuffer m_constantBufferData_alien;
+		uint32 m_indexCount_alien;
+
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> alienTexture;
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> alienView;
+
+		//Barrel
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_barrel;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer_barrel;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer_barrel;
+		ModelViewProjectionConstantBuffer m_constantBufferData_barrel;
+		uint32 m_indexCount_barrel;
+
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> barrelTexture;
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> barrelView;
+
+		///
 	};
 }
 

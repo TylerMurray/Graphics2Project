@@ -160,15 +160,29 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 
 	///
 
+	//Pyramid
 	m_constantBufferData_Pyramid = m_constantBufferData;
-	//m_constantBufferData_Pyramid.model = ? ? ;
-	XMStoreFloat4x4(&m_constantBufferData_Pyramid.model, XMMatrixTranspose(XMMatrixTranslation(-5.0f, -5.0f, 0.0f)));
+	XMStoreFloat4x4(&m_constantBufferData_Pyramid.model, XMMatrixTranspose(XMMatrixTranslation(0.0f, -2.0f, 0.0f)*XMMatrixRotationX(3.14159f))); //180 degrees
+	
+	//wolf																																			 
+	m_constantBufferData_wolf = m_constantBufferData;
+	XMStoreFloat4x4(&m_constantBufferData_wolf.model, XMMatrixTranspose(XMMatrixTranslation(-3.0f, 0.0f, 0.0f)*XMMatrixRotationY(3.14159f)* XMMatrixScaling(2.0f, 2.0f, 2.0))); //180 degrees
 
+
+	//VendingMachine
 	m_constantBufferData_objModel = m_constantBufferData;
-	XMStoreFloat4x4(&m_constantBufferData_objModel.model, XMMatrixTranspose(XMMatrixTranslation(5.0f, 0.0f, 0.0f)));
-	//XMStoreFloat4x4(&m_constantBufferData_objModel.model, XMMatrixTranspose(XMMatrixTranspose(XMMatrixRotationY(1.5708f))));
+	XMStoreFloat4x4(&m_constantBufferData_objModel.model, XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.0f, -42.0f) * XMMatrixScaling(0.25f,0.25f,0.25f)*XMMatrixRotationY(-1.5708f))); //90 degrees
 
+
+	//Alien
+	m_constantBufferData_alien = m_constantBufferData;
+	XMStoreFloat4x4(&m_constantBufferData_alien.model, XMMatrixTranspose(XMMatrixTranslation(-12.5f, 0.0f, 0.0f)*XMMatrixRotationY(3.14159f))); //180 degrees
 	///
+
+	//Barrel
+	m_constantBufferData_barrel = m_constantBufferData;
+	XMStoreFloat4x4(&m_constantBufferData_barrel.model, XMMatrixTranspose(XMMatrixTranslation(7.0f, 0.0f, 3.0f))); 
+
 
 }
 
@@ -273,8 +287,11 @@ void Sample3DSceneRenderer::Render()
 		0
 		);
 
+
 	///
-	//Start of Draw a Pyramid
+	////Start of Draw a Pyramid////
+
+
 	// Prepare the constant buffer to send it to the graphics device.
 	context->UpdateSubresource1(
 		m_constantBuffer.Get(),
@@ -324,9 +341,9 @@ void Sample3DSceneRenderer::Render()
 	);
 	//End of draw Pyramid
 
-	//Start of objModel
+	//Start of objModel VendingMachine
 	context->UpdateSubresource1(
-		m_constantBuffer_objModel.Get(),
+		m_constantBuffer.Get(),
 		0,
 		NULL,
 		&m_constantBufferData_objModel,
@@ -375,9 +392,168 @@ void Sample3DSceneRenderer::Render()
 		0,
 		0
 	);
-	//End of objModel
+	//End of objModel vending Machine
+
+	
 
 
+	//Draw Barrel//
+	context->UpdateSubresource1(
+		m_constantBuffer.Get(),
+		0,
+		NULL,
+		&m_constantBufferData_barrel,
+		0,
+		0,
+		0
+	);
+
+	stride = sizeof(VertexPositionUVNORMAL);
+	context->IASetVertexBuffers(
+		0,
+		1,
+		m_vertexBuffer_barrel.GetAddressOf(),
+		&stride,
+		&offset
+	);
+
+	context->IASetIndexBuffer(
+		m_indexBuffer_barrel.Get(),
+		DXGI_FORMAT_R32_UINT,
+		0
+	);
+
+	context->IASetInputLayout(m_inputLayout_objModel.Get()); //Thats fine using same layout
+
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	context->VSSetShader(
+		m_vertexShader_objModel.Get(),
+		nullptr,
+		0
+	); //Thats fine using same shader
+
+	context->PSSetShader(
+		m_pixelShader_objModel.Get(),
+		nullptr,
+		0
+	); //Thats fine using same shader
+
+
+	context->PSSetShaderResources(0, 1, barrelView.GetAddressOf());
+	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf()); //thats fine using same sampler
+
+	context->DrawIndexed(
+		m_indexCount_barrel,
+		0,
+		0
+	);
+	///
+
+	//Draw wolf//
+	context->UpdateSubresource1(
+		m_constantBuffer.Get(),
+		0,
+		NULL,
+		&m_constantBufferData_wolf,
+		0,
+		0,
+		0
+	);
+
+	stride = sizeof(VertexPositionUVNORMAL);
+	context->IASetVertexBuffers(
+		0,
+		1,
+		m_vertexBuffer_wolf.GetAddressOf(),
+		&stride,
+		&offset
+	);
+
+	context->IASetIndexBuffer(
+		m_indexBuffer_wolf.Get(),
+		DXGI_FORMAT_R32_UINT,
+		0
+	);
+
+	context->IASetInputLayout(m_inputLayout_objModel.Get()); //Thats fine using same layout
+
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	context->VSSetShader(
+		m_vertexShader_objModel.Get(),
+		nullptr,
+		0
+	); //Thats fine using same shader
+
+	context->PSSetShader(
+		m_pixelShader_objModel.Get(),
+		nullptr,
+		0
+	); //Thats fine using same shader
+
+
+	context->PSSetShaderResources(0, 1, wolfView.GetAddressOf());
+	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf()); //thats fine using same sampler
+
+	context->DrawIndexed(
+		m_indexCount_wolf,
+		0,
+		0
+	);
+
+
+	//Draw Alien//
+	context->UpdateSubresource1(
+		m_constantBuffer.Get(),
+		0,
+		NULL,
+		&m_constantBufferData_alien,
+		0,
+		0,
+		0
+	);
+
+	stride = sizeof(VertexPositionUVNORMAL);
+	context->IASetVertexBuffers(
+		0,
+		1,
+		m_vertexBuffer_alien.GetAddressOf(),
+		&stride,
+		&offset
+	);
+
+	context->IASetIndexBuffer(
+		m_indexBuffer_alien.Get(),
+		DXGI_FORMAT_R32_UINT,
+		0
+	);
+
+	context->IASetInputLayout(m_inputLayout_objModel.Get()); //Thats fine using same layout
+
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	context->VSSetShader(
+		m_vertexShader_objModel.Get(),
+		nullptr,
+		0
+	); //Thats fine using same shader
+
+	context->PSSetShader(
+		m_pixelShader_objModel.Get(),
+		nullptr,
+		0
+	); //Thats fine using same shader
+
+
+	context->PSSetShaderResources(0, 1, alienView.GetAddressOf());
+	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf()); //thats fine using same sampler
+
+	context->DrawIndexed(
+		m_indexCount_alien,
+		0,
+		0
+	);
 	///
 
 }
@@ -518,6 +694,9 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 
 	///
 	/////////////////////////////PYRAMID//////////////////////////////
+
+	CD3D11_BUFFER_DESC constantBufferDesc_Pyramid(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+	m_deviceResources->GetD3DDevice()->CreateBuffer( &constantBufferDesc_Pyramid, nullptr, &m_constantBuffer_Pyramid);
 
 		// Load mesh vertices. Each vertex has a position and a color.
 		static const VertexPositionColor PyramidVertices[] =
@@ -706,7 +885,193 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 
 ///////////////////////////////////////End of Vending Machine OBJ Model////////////////////////////////////////////////
 
+/////////////////////////////////Start of Barrel//////////////////////////////////
+		std::vector<VertexPositionUVNORMAL> barrelVertices;
+		std::vector<unsigned int> barrelIndices;
+
+		bool res3 = LoadOBJModel("Assets/barrel.obj", barrelVertices, barrelIndices);
+
+		m_indexCount_barrel = barrelIndices.size();
+
+
+		if (res3 == true)
+		{
+			CD3D11_BUFFER_DESC constantBufferDesc_barrel(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&constantBufferDesc_barrel,
+					nullptr,
+					&m_constantBuffer_barrel
+				)
+			);
+
+
+
+			//Data setup//
+			D3D11_SUBRESOURCE_DATA vertexBufferData_barrel = { 0 };
+			vertexBufferData_barrel.pSysMem = barrelVertices.data();
+			vertexBufferData_barrel.SysMemPitch = 0;
+			vertexBufferData_barrel.SysMemSlicePitch = 0;
+
+			CD3D11_BUFFER_DESC vertexBufferDesc_barrel(sizeof(VertexPositionUVNORMAL) * barrelVertices.size(), D3D11_BIND_VERTEX_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&vertexBufferDesc_barrel,
+					&vertexBufferData_barrel,
+					&m_vertexBuffer_barrel
+				)
+			);
+
+			D3D11_SUBRESOURCE_DATA indexBufferData_barrel = { 0 };
+			indexBufferData_barrel.pSysMem = barrelIndices.data();
+			indexBufferData_barrel.SysMemPitch = 0;
+			indexBufferData_barrel.SysMemSlicePitch = 0;
+
+			CD3D11_BUFFER_DESC indexBufferDesc_barrel(sizeof(unsigned int) * barrelIndices.size(), D3D11_BIND_INDEX_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&indexBufferDesc_barrel,
+					&indexBufferData_barrel,
+					&m_indexBuffer_barrel
+				)
+			);
+		}
+
+		HRESULT result3 = CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(),
+			L"Assets\\PropBarrel.dds",
+			((ComPtr<ID3D11Resource>)barrelTexture).GetAddressOf(),
+			barrelView.GetAddressOf());
+
+///////////////////////////////////End of barrel////////////////////////////////////
+
+/////////////////////////////////Start of wolf//////////////////////////////////
+		std::vector<VertexPositionUVNORMAL> wolfVertices;
+		std::vector<unsigned int> wolfIndices;
+
+		bool res4 = LoadOBJModel("Assets/wolf.obj", wolfVertices, wolfIndices);
+
+		m_indexCount_wolf = wolfIndices.size();
+
+
+		if (res4 == true)
+		{
+			CD3D11_BUFFER_DESC constantBufferDesc_wolf(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&constantBufferDesc_wolf,
+					nullptr,
+					&m_constantBuffer_wolf
+				)
+			);
+
+
+
+			//Data setup//
+			D3D11_SUBRESOURCE_DATA vertexBufferData_wolf = { 0 };
+			vertexBufferData_wolf.pSysMem = wolfVertices.data();
+			vertexBufferData_wolf.SysMemPitch = 0;
+			vertexBufferData_wolf.SysMemSlicePitch = 0;
+
+			CD3D11_BUFFER_DESC vertexBufferDesc_wolf(sizeof(VertexPositionUVNORMAL) * wolfVertices.size(), D3D11_BIND_VERTEX_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&vertexBufferDesc_wolf,
+					&vertexBufferData_wolf,
+					&m_vertexBuffer_wolf
+				)
+			);
+
+			D3D11_SUBRESOURCE_DATA indexBufferData_wolf = { 0 };
+			indexBufferData_wolf.pSysMem = wolfIndices.data();
+			indexBufferData_wolf.SysMemPitch = 0;
+			indexBufferData_wolf.SysMemSlicePitch = 0;
+
+			CD3D11_BUFFER_DESC indexBufferDesc_wolf(sizeof(unsigned int) * wolfIndices.size(), D3D11_BIND_INDEX_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&indexBufferDesc_wolf,
+					&indexBufferData_wolf,
+					&m_indexBuffer_wolf
+				)
+			);
+		}
+
+		HRESULT result4 = CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(),
+			L"Assets\\alphaWhiteR.dds",
+			((ComPtr<ID3D11Resource>)wolfTexture).GetAddressOf(),
+			wolfView.GetAddressOf());
+
+/////////////////////////////////////////////End of wolf////////////////////////////////////
+
+
+
+//////////////////////////////////////////Start of Alien//////////////////////////////////////////////
+
+//Load in obj file and get info//
+		std::vector<VertexPositionUVNORMAL> alienVertices;
+		std::vector<unsigned int> alienIndices;
+
+		bool res2 = LoadOBJModel("Assets/Xenomorph.obj", alienVertices, alienIndices);
+
+		m_indexCount_alien = alienIndices.size();
+
+
+		if (res2 == true)
+		{
+			CD3D11_BUFFER_DESC constantBufferDesc_alien(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&constantBufferDesc_alien,
+					nullptr,
+					&m_constantBuffer_alien
+				)
+			);
+
+
+
+			//Data setup//
+			D3D11_SUBRESOURCE_DATA vertexBufferData_alien = { 0 };
+			vertexBufferData_alien.pSysMem = alienVertices.data();
+			vertexBufferData_alien.SysMemPitch = 0;
+			vertexBufferData_alien.SysMemSlicePitch = 0;
+
+			CD3D11_BUFFER_DESC vertexBufferDesc_alien(sizeof(VertexPositionUVNORMAL) * alienVertices.size(), D3D11_BIND_VERTEX_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&vertexBufferDesc_alien,
+					&vertexBufferData_alien,
+					&m_vertexBuffer_alien
+				)
+			);
+
+			D3D11_SUBRESOURCE_DATA indexBufferData_alien = { 0 };
+			indexBufferData_alien.pSysMem = alienIndices.data();
+			indexBufferData_alien.SysMemPitch = 0;
+			indexBufferData_alien.SysMemSlicePitch = 0;
+
+			CD3D11_BUFFER_DESC indexBufferDesc_alien(sizeof(unsigned int) * alienIndices.size(), D3D11_BIND_INDEX_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&indexBufferDesc_alien,
+					&indexBufferData_alien,
+					&m_indexBuffer_alien
+				)
+			);
+		}
+
+		HRESULT result2 = CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(),
+			L"Assets\\Xenomorph_S.dds",
+			((ComPtr<ID3D11Resource>)alienTexture).GetAddressOf(),
+			alienView.GetAddressOf());
+
+		///////////////////////////////////End of Alien////////////////////////////////////
+
+
+		
+
 	///
+		
+	
 }
 
 void Sample3DSceneRenderer::ReleaseDeviceDependentResources()
@@ -725,7 +1090,8 @@ void Sample3DSceneRenderer::ReleaseDeviceDependentResources()
 	m_indexBuffer_Pyramid.Reset();
 	m_constantBuffer_Pyramid.Reset();
 
-	//Reset Model
+
+	//Reset VendingMachine Model
 	m_vertexBuffer_objModel.Reset();
 	m_indexBuffer_objModel.Reset();
 	m_constantBuffer_objModel.Reset();
@@ -734,12 +1100,34 @@ void Sample3DSceneRenderer::ReleaseDeviceDependentResources()
 	m_vertexShader_objModel.Reset();
 	m_pixelShader_objModel.Reset();
 
-
-	//Reset texture
 	diffuseTexture.Reset();
 	vendingMachineTexture.Reset();
 	vendingMachineView.Reset();
 	vendingMachineSampler.Reset();
+
+
+	
+
+    //Reset Alien
+	m_vertexBuffer_alien.Reset();
+	m_indexBuffer_alien.Reset();
+	m_constantBuffer_alien.Reset();
+	alienTexture.Reset();
+	alienView.Reset();
+
+	//Reset Barrel
+	m_vertexBuffer_barrel.Reset();
+	m_indexBuffer_barrel.Reset();
+	m_constantBuffer_barrel.Reset();
+	barrelTexture.Reset();
+	barrelView.Reset();
+
+	//Reset wolf
+	m_vertexBuffer_wolf.Reset();
+	m_indexBuffer_wolf.Reset();
+	m_constantBuffer_wolf.Reset();
+	wolfTexture.Reset();
+	wolfView.Reset();
 	///
 }
 
@@ -780,7 +1168,7 @@ bool Sample3DSceneRenderer::LoadOBJModel(const char* path, std::vector <VertexPo
 			{
 				XMFLOAT3 vertex;
 				fscanf_s(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
-				vertex.x = -vertex.x;
+				//vertex.x = -vertex.x;
 				temp_vertices.push_back(vertex);
 			}
 			else if(strcmp(lineHeader, "vt") == 0)
@@ -794,7 +1182,7 @@ bool Sample3DSceneRenderer::LoadOBJModel(const char* path, std::vector <VertexPo
 			{
 				XMFLOAT3 normal;
 				fscanf_s(file, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
-				normal.x = -normal.x;
+				//normal.x = -normal.x;
 				temp_normals.push_back(normal);
 			}
 			else if (strcmp(lineHeader, "f") == 0)
@@ -813,16 +1201,16 @@ bool Sample3DSceneRenderer::LoadOBJModel(const char* path, std::vector <VertexPo
 
 				//push-back all found data
 				vertexIndices.push_back(vertexIndex[0]);
-				vertexIndices.push_back(vertexIndex[2]);
 				vertexIndices.push_back(vertexIndex[1]);
+				vertexIndices.push_back(vertexIndex[2]);
 
 				uvIndices.push_back(uvIndex[0]);
-				uvIndices.push_back(uvIndex[2]);
 				uvIndices.push_back(uvIndex[1]);
+				uvIndices.push_back(uvIndex[2]);
 
 				normalIndices.push_back(normalIndex[0]);
-				normalIndices.push_back(normalIndex[2]);
 				normalIndices.push_back(normalIndex[1]);
+				normalIndices.push_back(normalIndex[2]);
 
 
 			}
