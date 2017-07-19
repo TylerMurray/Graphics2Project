@@ -76,7 +76,7 @@ namespace App7
 
 
 
-		//Direct3D resources for .obj loaded model VendingMachine
+		//VendingMachine
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_objModel;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer_objModel;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer_objModel;
@@ -85,7 +85,6 @@ namespace App7
 		Microsoft::WRL::ComPtr<ID3D11VertexShader>	m_vertexShader_objModel;
 		Microsoft::WRL::ComPtr<ID3D11PixelShader>	m_pixelShader_objModel;
 
-		//System resources for .obj loaded model VendingMachine
 		ModelViewProjectionConstantBuffer m_constantBufferData_objModel;
 		uint32 m_indexCount_objModel;
 	
@@ -95,18 +94,17 @@ namespace App7
 		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> vendingMachineView;
 		Microsoft::WRL::ComPtr<ID3D11SamplerState> vendingMachineSampler;
 		
-		//Lighting VendingMachine
-		
 
-		//wolf
-		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_wolf;
-		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer_wolf;
-		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer_wolf;
-		ModelViewProjectionConstantBuffer m_constantBufferData_wolf;
-		uint32 m_indexCount_wolf;
 
-		Microsoft::WRL::ComPtr<ID3D11Texture2D> wolfTexture;
-		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> wolfView;
+		//Wall
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_wall;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer_wall;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer_wall;
+		ModelViewProjectionConstantBuffer m_constantBufferData_wall;
+		uint32 m_indexCount_wall;
+
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> wallTexture;
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> wallView;
 		
 
 
@@ -131,6 +129,40 @@ namespace App7
 		Microsoft::WRL::ComPtr<ID3D11Texture2D> barrelTexture;
 		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> barrelView;
 
+
+		//floor
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_floor;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer_floor;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer_floor;
+		ModelViewProjectionConstantBuffer m_constantBufferData_floor;
+		uint32 m_indexCount_floor;
+
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> floorTexture;
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> floorView;
+
+		//Lighting Floor
+		dir_light m_dirLight_floor;
+		point_light m_pointLight_floor;
+		spot_light m_spotLight_floor;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_DirBuffer_floor;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_PointBuffer_floor;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_SpotBuffer_floor;
+
+		float dirY_floor = -1.0f;
+		float dirX_floor = 0.0f;
+		bool flip = false;
+
+
+
+		//Drone
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_drone;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer_drone;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer_drone;
+		ModelViewProjectionConstantBuffer m_constantBufferData_drone;
+		uint32 m_indexCount_drone;
+
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> droneTexture;
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> droneView;
 		///
 	};
 }

@@ -25,4 +25,28 @@ namespace App7
 
 	};
 
+	//TODO make all buffer XMFLOAT4
+
+	struct dir_light
+	{
+		DirectX::XMFLOAT3 dir_direction;
+		DirectX::XMFLOAT4 dir_color;
+
+	};
+
+	struct point_light
+	{
+		DirectX::XMFLOAT3 point_position;
+		DirectX::XMFLOAT4 point_color;
+
+	};
+
+	struct spot_light
+	{
+		DirectX::XMFLOAT3 spot_position;
+		DirectX::XMFLOAT3 spot_coneDir;
+		float spot_coneRatio;
+		DirectX::XMFLOAT4 spot_color;
+
+	};
 }

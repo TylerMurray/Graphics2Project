@@ -29,7 +29,7 @@ Sample3DSceneRenderer::Sample3DSceneRenderer(const std::shared_ptr<DX::DeviceRes
 	static const XMVECTORF32 at = { 0.0f, 0.0f, 0.0f, 0.0f };
 	static const XMVECTORF32 up = { 0.0f, 1.0f, 0.0f, 0.0f };
 	XMStoreFloat4x4(&camera, XMMatrixInverse(0, XMMatrixLookAtLH(eye, at, up)));
-	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixInverse(0, XMMatrixLookAtRH(eye, at, up))));
+	XMStoreFloat4x4(&m_constantBufferData.view, XMMatrixTranspose(XMMatrixInverse(0, XMMatrixLookAtLH(eye, at, up))));
 
 	///
 }
@@ -159,30 +159,84 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 	///
 
 	///
+	
+	//Rotations
+	//3.14159 = 180 degrees
+	//1.5708 = 90 degrees
 
 	//Pyramid
 	m_constantBufferData_Pyramid = m_constantBufferData;
-	XMStoreFloat4x4(&m_constantBufferData_Pyramid.model, XMMatrixTranspose(XMMatrixTranslation(0.0f, -2.0f, 0.0f)*XMMatrixRotationX(3.14159f))); //180 degrees
+	XMStoreFloat4x4(&m_constantBufferData_Pyramid.model, XMMatrixTranspose(XMMatrixTranslation(0.0f, -2.0f, 0.0f)*XMMatrixRotationX(3.14159f))); 
 	
-	//wolf																																			 
-	m_constantBufferData_wolf = m_constantBufferData;
-	XMStoreFloat4x4(&m_constantBufferData_wolf.model, XMMatrixTranspose(XMMatrixTranslation(-3.0f, 0.0f, 0.0f)*XMMatrixRotationY(3.14159f)* XMMatrixScaling(2.0f, 2.0f, 2.0))); //180 degrees
+	//wall																																			 
+	m_constantBufferData_wall = m_constantBufferData;
+	XMStoreFloat4x4(&m_constantBufferData_wall.model, XMMatrixTranspose(XMMatrixTranslation(-2.75f, 0.0f, 0.0f)*XMMatrixRotationY(3.14159f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
 
 
 	//VendingMachine
 	m_constantBufferData_objModel = m_constantBufferData;
-	XMStoreFloat4x4(&m_constantBufferData_objModel.model, XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.0f, -42.0f) * XMMatrixScaling(0.25f,0.25f,0.25f)*XMMatrixRotationY(-1.5708f))); //90 degrees
-
+	XMStoreFloat4x4(&m_constantBufferData_objModel.model, XMMatrixTranspose(XMMatrixTranslation(-1.0f, -15.0f, -41.0f) * XMMatrixScaling(0.25f,0.25f,0.25f)*XMMatrixRotationY(-1.5708f)));
 
 	//Alien
 	m_constantBufferData_alien = m_constantBufferData;
-	XMStoreFloat4x4(&m_constantBufferData_alien.model, XMMatrixTranspose(XMMatrixTranslation(-12.5f, 0.0f, 0.0f)*XMMatrixRotationY(3.14159f))); //180 degrees
+	XMStoreFloat4x4(&m_constantBufferData_alien.model, XMMatrixTranspose(XMMatrixTranslation(-8.0f, -4.0f, 0.0f)*XMMatrixRotationY(3.14159f)* XMMatrixScaling(0.9f, 0.9f, 0.9f)));
 	///
 
 	//Barrel
 	m_constantBufferData_barrel = m_constantBufferData;
-	XMStoreFloat4x4(&m_constantBufferData_barrel.model, XMMatrixTranspose(XMMatrixTranslation(7.0f, 0.0f, 3.0f))); 
+	XMStoreFloat4x4(&m_constantBufferData_barrel.model, XMMatrixTranspose(XMMatrixTranslation(13.5f, -4.75f, 2.75f)* XMMatrixScaling(0.75f, 0.75f, 0.75f)));
 
+	//floor
+	m_constantBufferData_floor = m_constantBufferData;
+	XMStoreFloat4x4(&m_constantBufferData_floor.model, XMMatrixTranspose(XMMatrixTranslation(1.75f, -1.2f, 0.0f)* XMMatrixScaling(5.0f, 5.0f, 5.0f)));
+
+	if (flip == false)
+	{
+		dirY_floor += timer.GetElapsedSeconds() * 0.2f;
+		dirX_floor += timer.GetElapsedSeconds() * 0.2f;
+	}
+	else
+	{
+		dirY_floor -= timer.GetElapsedSeconds() * 0.2f;
+		dirX_floor -= timer.GetElapsedSeconds() * 0.2f;
+	}
+
+	if (dirY_floor > 0.0f)
+	{
+		//dirY_floor = -1.0f;
+		flip = true;
+	}
+	if (dirX_floor > 1.0f)
+	{
+		//dirX_floor = 0.0f;
+		flip = true;
+	}
+	if (dirY_floor < -1.0f)
+	{
+		//dirY_floor = -1.0f;
+		flip = false;
+	}
+	if (dirX_floor < 0.0f)
+	{
+		//dirX_floor = 0.0f;
+		flip = false;
+	}
+
+	m_dirLight_floor.dir_direction = XMFLOAT3{ dirX_floor, dirY_floor, 0.0f };
+	m_dirLight_floor.dir_color = XMFLOAT4{ 1.0f, 1.0f, 1.0f, 1.0f };
+
+	m_pointLight_floor.point_position = XMFLOAT3{ dirX_floor + 5.0f, dirY_floor, 0.0f };
+	m_pointLight_floor.point_color = XMFLOAT4{ 1.0f, 1.0f, 1.0f, 1.0f };
+
+	m_spotLight_floor.spot_position = XMFLOAT3{ dirX_floor, dirY_floor, 0.0f };
+	m_spotLight_floor.spot_color = XMFLOAT4{ 1.0f, 1.0f, 1.0f, 1.0f };
+	m_spotLight_floor.spot_coneDir = XMFLOAT3{ dirX_floor, dirY_floor, 0.0f };
+	m_spotLight_floor.spot_coneRatio = 0.25f;
+
+	//Drone
+	m_constantBufferData_drone = m_constantBufferData;
+	XMStoreFloat4x4(&m_constantBufferData_drone.model, XMMatrixTranspose(XMMatrixScaling(0.005f, 0.005f, 0.005f)*newcamera*XMMatrixTranslation(0.0f, -0.5f, 0.0f)));
+	
 
 }
 
@@ -291,7 +345,6 @@ void Sample3DSceneRenderer::Render()
 	///
 	////Start of Draw a Pyramid////
 
-
 	// Prepare the constant buffer to send it to the graphics device.
 	context->UpdateSubresource1(
 		m_constantBuffer.Get(),
@@ -382,6 +435,7 @@ void Sample3DSceneRenderer::Render()
 		nullptr,
 		0
 	);
+	
 
 	//ID3D11ShaderResourceView* texViews[] = { environmentView };
 	context->PSSetShaderResources(0, 1, vendingMachineView.GetAddressOf());
@@ -450,12 +504,12 @@ void Sample3DSceneRenderer::Render()
 	);
 	///
 
-	//Draw wolf//
+	//Draw wall//
 	context->UpdateSubresource1(
 		m_constantBuffer.Get(),
 		0,
 		NULL,
-		&m_constantBufferData_wolf,
+		&m_constantBufferData_wall,
 		0,
 		0,
 		0
@@ -465,13 +519,13 @@ void Sample3DSceneRenderer::Render()
 	context->IASetVertexBuffers(
 		0,
 		1,
-		m_vertexBuffer_wolf.GetAddressOf(),
+		m_vertexBuffer_wall.GetAddressOf(),
 		&stride,
 		&offset
 	);
 
 	context->IASetIndexBuffer(
-		m_indexBuffer_wolf.Get(),
+		m_indexBuffer_wall.Get(),
 		DXGI_FORMAT_R32_UINT,
 		0
 	);
@@ -493,14 +547,182 @@ void Sample3DSceneRenderer::Render()
 	); //Thats fine using same shader
 
 
-	context->PSSetShaderResources(0, 1, wolfView.GetAddressOf());
+	context->PSSetShaderResources(0, 1, wallView.GetAddressOf());
 	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf()); //thats fine using same sampler
 
 	context->DrawIndexed(
-		m_indexCount_wolf,
+		m_indexCount_wall,
 		0,
 		0
 	);
+
+	//Draw floor//
+	context->UpdateSubresource1(
+		m_constantBuffer.Get(),
+		0,
+		NULL,
+		&m_constantBufferData_floor,
+		0,
+		0,
+		0
+	);
+
+	//update dir_buffer
+	context->UpdateSubresource1(
+		m_constantBuffer_floor.Get(),
+		0,
+		NULL,
+		&m_dirLight_floor,
+		0,
+		0,
+		0
+	);
+	////update point_buffer
+	//context->UpdateSubresource1(
+	//	m_PointBuffer_floor.Get(),
+	//	0,
+	//	NULL,
+	//	&m_pointLight_floor,
+	//	0,
+	//	0,
+	//	0
+	//);
+	////update spot_buffer
+	//context->UpdateSubresource1(
+	//	m_SpotBuffer_floor.Get(),
+	//	0,
+	//	NULL,
+	//	&m_spotLight_floor,
+	//	0,
+	//	0,
+	//	0
+	//);
+
+	stride = sizeof(VertexPositionUVNORMAL);
+	context->IASetVertexBuffers(
+		0,
+		1,
+		m_vertexBuffer_floor.GetAddressOf(),
+		&stride,
+		&offset
+	);
+
+	context->IASetIndexBuffer(
+		m_indexBuffer_floor.Get(),
+		DXGI_FORMAT_R32_UINT,
+		0
+	);
+
+	context->IASetInputLayout(m_inputLayout_objModel.Get()); //Thats fine using same layout
+
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	context->VSSetShader(
+		m_vertexShader_objModel.Get(),
+		nullptr,
+		0
+	); //Thats fine using same shader
+
+	context->PSSetShader(
+		m_pixelShader_objModel.Get(),
+		nullptr,
+		0
+	); //Thats fine using same shader
+
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_floor.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
+	//Set lighting buffers
+	//context->PSSetConstantBuffers1(
+	//	0,
+	//	1,
+	//	m_DirBuffer_floor.GetAddressOf(),
+	//	nullptr,
+	//	nullptr
+	//);
+	//context->PSSetConstantBuffers1(
+	//	0,
+	//	1,
+	//	m_PointBuffer_floor.GetAddressOf(),
+	//	nullptr,
+	//	nullptr
+	//);
+	//context->PSSetConstantBuffers1(
+	//	0,
+	//	1,
+	//	m_SpotBuffer_floor.GetAddressOf(),
+	//	nullptr,
+	//	nullptr
+	//);
+	
+
+	context->PSSetShaderResources(0, 1, floorView.GetAddressOf());
+	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf()); //thats fine using same sampler
+
+	context->DrawIndexed(
+		m_indexCount_floor,
+		0,
+		0
+	);
+	///
+
+	//Draw drone//
+	context->UpdateSubresource1(
+		m_constantBuffer.Get(),
+		0,
+		NULL,
+		&m_constantBufferData_drone,
+		0,
+		0,
+		0
+	);
+
+	stride = sizeof(VertexPositionUVNORMAL);
+	context->IASetVertexBuffers(
+		0,
+		1,
+		m_vertexBuffer_drone.GetAddressOf(),
+		&stride,
+		&offset
+	);
+
+	context->IASetIndexBuffer(
+		m_indexBuffer_drone.Get(),
+		DXGI_FORMAT_R32_UINT,
+		0
+	);
+
+	context->IASetInputLayout(m_inputLayout_objModel.Get()); //Thats fine using same layout
+
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	context->VSSetShader(
+		m_vertexShader_objModel.Get(),
+		nullptr,
+		0
+	); //Thats fine using same shader
+
+	context->PSSetShader(
+		m_pixelShader_objModel.Get(),
+		nullptr,
+		0
+	); //Thats fine using same shader
+
+
+	context->PSSetShaderResources(0, 1, droneView.GetAddressOf());
+	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf()); //thats fine using same sampler
+
+	context->DrawIndexed(
+		m_indexCount_drone,
+		0,
+		0
+	);
+	///
 
 
 	//Draw Alien//
@@ -944,65 +1166,205 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 
 ///////////////////////////////////End of barrel////////////////////////////////////
 
-/////////////////////////////////Start of wolf//////////////////////////////////
-		std::vector<VertexPositionUVNORMAL> wolfVertices;
-		std::vector<unsigned int> wolfIndices;
+/////////////////////////////////Start of Wall//////////////////////////////////
+		std::vector<VertexPositionUVNORMAL> wallVertices;
+		std::vector<unsigned int> wallIndices;
 
-		bool res4 = LoadOBJModel("Assets/wolf.obj", wolfVertices, wolfIndices);
+		bool res4 = LoadOBJModel("Assets/wall.obj", wallVertices, wallIndices);
 
-		m_indexCount_wolf = wolfIndices.size();
+		m_indexCount_wall = wallIndices.size();
 
 
 		if (res4 == true)
 		{
-			CD3D11_BUFFER_DESC constantBufferDesc_wolf(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+			CD3D11_BUFFER_DESC constantBufferDesc_wall(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
 			DX::ThrowIfFailed(
 				m_deviceResources->GetD3DDevice()->CreateBuffer(
-					&constantBufferDesc_wolf,
+					&constantBufferDesc_wall,
 					nullptr,
-					&m_constantBuffer_wolf
+					&m_constantBuffer_wall
 				)
 			);
 
 
 
 			//Data setup//
-			D3D11_SUBRESOURCE_DATA vertexBufferData_wolf = { 0 };
-			vertexBufferData_wolf.pSysMem = wolfVertices.data();
-			vertexBufferData_wolf.SysMemPitch = 0;
-			vertexBufferData_wolf.SysMemSlicePitch = 0;
+			D3D11_SUBRESOURCE_DATA vertexBufferData_wall = { 0 };
+			vertexBufferData_wall.pSysMem = wallVertices.data();
+			vertexBufferData_wall.SysMemPitch = 0;
+			vertexBufferData_wall.SysMemSlicePitch = 0;
 
-			CD3D11_BUFFER_DESC vertexBufferDesc_wolf(sizeof(VertexPositionUVNORMAL) * wolfVertices.size(), D3D11_BIND_VERTEX_BUFFER);
+			CD3D11_BUFFER_DESC vertexBufferDesc_wall(sizeof(VertexPositionUVNORMAL) * wallVertices.size(), D3D11_BIND_VERTEX_BUFFER);
 			DX::ThrowIfFailed(
 				m_deviceResources->GetD3DDevice()->CreateBuffer(
-					&vertexBufferDesc_wolf,
-					&vertexBufferData_wolf,
-					&m_vertexBuffer_wolf
+					&vertexBufferDesc_wall,
+					&vertexBufferData_wall,
+					&m_vertexBuffer_wall
 				)
 			);
 
-			D3D11_SUBRESOURCE_DATA indexBufferData_wolf = { 0 };
-			indexBufferData_wolf.pSysMem = wolfIndices.data();
-			indexBufferData_wolf.SysMemPitch = 0;
-			indexBufferData_wolf.SysMemSlicePitch = 0;
+			D3D11_SUBRESOURCE_DATA indexBufferData_wall = { 0 };
+			indexBufferData_wall.pSysMem = wallIndices.data();
+			indexBufferData_wall.SysMemPitch = 0;
+			indexBufferData_wall.SysMemSlicePitch = 0;
 
-			CD3D11_BUFFER_DESC indexBufferDesc_wolf(sizeof(unsigned int) * wolfIndices.size(), D3D11_BIND_INDEX_BUFFER);
+			CD3D11_BUFFER_DESC indexBufferDesc_wall(sizeof(unsigned int) * wallIndices.size(), D3D11_BIND_INDEX_BUFFER);
 			DX::ThrowIfFailed(
 				m_deviceResources->GetD3DDevice()->CreateBuffer(
-					&indexBufferDesc_wolf,
-					&indexBufferData_wolf,
-					&m_indexBuffer_wolf
+					&indexBufferDesc_wall,
+					&indexBufferData_wall,
+					&m_indexBuffer_wall
 				)
 			);
 		}
 
 		HRESULT result4 = CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(),
-			L"Assets\\alphaWhiteR.dds",
-			((ComPtr<ID3D11Resource>)wolfTexture).GetAddressOf(),
-			wolfView.GetAddressOf());
+			L"Assets\\wall.dds",
+			((ComPtr<ID3D11Resource>)wallTexture).GetAddressOf(),
+			wallView.GetAddressOf());
 
-/////////////////////////////////////////////End of wolf////////////////////////////////////
+/////////////////////////////////////////////End of wall////////////////////////////////////
 
+/////////////////////////////////Start of Floor//////////////////////////////////
+		std::vector<VertexPositionUVNORMAL> floorVertices;
+		std::vector<unsigned int> floorIndices;
+
+		bool res5 = LoadOBJModel("Assets/floor.obj", floorVertices, floorIndices);
+
+		m_indexCount_floor = floorIndices.size();
+
+
+		if (res5 == true)
+		{
+			CD3D11_BUFFER_DESC constantBufferDesc_floor(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&constantBufferDesc_floor,
+					nullptr,
+					&m_constantBuffer_floor
+				)
+			);
+			/*CD3D11_BUFFER_DESC DirBufferDesc_floor(sizeof(dir_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&DirBufferDesc_floor,
+					nullptr,
+					&m_DirBuffer_floor
+				)
+			);
+			CD3D11_BUFFER_DESC PointBufferDesc_floor(sizeof(point_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&PointBufferDesc_floor,
+					nullptr,
+					&m_PointBuffer_floor
+				)
+			);
+			CD3D11_BUFFER_DESC SpotBufferDesc_floor(sizeof(spot_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&SpotBufferDesc_floor,
+					nullptr,
+					&m_SpotBuffer_floor
+				)
+			);*/
+
+			//Data setup//
+			D3D11_SUBRESOURCE_DATA vertexBufferData_floor = { 0 };
+			vertexBufferData_floor.pSysMem = floorVertices.data();
+			vertexBufferData_floor.SysMemPitch = 0;
+			vertexBufferData_floor.SysMemSlicePitch = 0;
+
+			CD3D11_BUFFER_DESC vertexBufferDesc_floor(sizeof(VertexPositionUVNORMAL) * floorVertices.size(), D3D11_BIND_VERTEX_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&vertexBufferDesc_floor,
+					&vertexBufferData_floor,
+					&m_vertexBuffer_floor
+				)
+			);
+
+			D3D11_SUBRESOURCE_DATA indexBufferData_floor = { 0 };
+			indexBufferData_floor.pSysMem = floorIndices.data();
+			indexBufferData_floor.SysMemPitch = 0;
+			indexBufferData_floor.SysMemSlicePitch = 0;
+
+			CD3D11_BUFFER_DESC indexBufferDesc_floor(sizeof(unsigned int) * floorIndices.size(), D3D11_BIND_INDEX_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&indexBufferDesc_floor,
+					&indexBufferData_floor,
+					&m_indexBuffer_floor
+				)
+			);
+		}
+
+		HRESULT result5 = CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(),
+			L"Assets\\floor.dds",
+			((ComPtr<ID3D11Resource>)floorTexture).GetAddressOf(),
+			floorView.GetAddressOf());
+
+/////////////////////////////////////////////End of Floor////////////////////////////////////
+
+
+/////////////////////////////////Start of Drone//////////////////////////////////
+		std::vector<VertexPositionUVNORMAL> droneVertices;
+		std::vector<unsigned int> droneIndices;
+
+		bool res6 = LoadOBJModel("Assets/drone.obj", droneVertices, droneIndices);
+
+		m_indexCount_drone = droneIndices.size();
+
+
+		if (res6 == true)
+		{
+			CD3D11_BUFFER_DESC constantBufferDesc_drone(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&constantBufferDesc_drone,
+					nullptr,
+					&m_constantBuffer_drone
+				)
+			);
+
+
+
+			//Data setup//
+			D3D11_SUBRESOURCE_DATA vertexBufferData_drone = { 0 };
+			vertexBufferData_drone.pSysMem = droneVertices.data();
+			vertexBufferData_drone.SysMemPitch = 0;
+			vertexBufferData_drone.SysMemSlicePitch = 0;
+
+			CD3D11_BUFFER_DESC vertexBufferDesc_drone(sizeof(VertexPositionUVNORMAL) * droneVertices.size(), D3D11_BIND_VERTEX_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&vertexBufferDesc_drone,
+					&vertexBufferData_drone,
+					&m_vertexBuffer_drone
+				)
+			);
+
+			D3D11_SUBRESOURCE_DATA indexBufferData_drone = { 0 };
+			indexBufferData_drone.pSysMem = droneIndices.data();
+			indexBufferData_drone.SysMemPitch = 0;
+			indexBufferData_drone.SysMemSlicePitch = 0;
+
+			CD3D11_BUFFER_DESC indexBufferDesc_drone(sizeof(unsigned int) * droneIndices.size(), D3D11_BIND_INDEX_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&indexBufferDesc_drone,
+					&indexBufferData_drone,
+					&m_indexBuffer_drone
+				)
+			);
+		}
+
+		HRESULT result6 = CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(),
+			L"Assets\\wall.dds",
+			((ComPtr<ID3D11Resource>)droneTexture).GetAddressOf(),
+			droneView.GetAddressOf());
+
+/////////////////////////////////////////////End of Drone////////////////////////////////////
 
 
 //////////////////////////////////////////Start of Alien//////////////////////////////////////////////
@@ -1122,12 +1484,32 @@ void Sample3DSceneRenderer::ReleaseDeviceDependentResources()
 	barrelTexture.Reset();
 	barrelView.Reset();
 
-	//Reset wolf
-	m_vertexBuffer_wolf.Reset();
-	m_indexBuffer_wolf.Reset();
-	m_constantBuffer_wolf.Reset();
-	wolfTexture.Reset();
-	wolfView.Reset();
+	//Reset Wall
+	m_vertexBuffer_wall.Reset();
+	m_indexBuffer_wall.Reset();
+	m_constantBuffer_wall.Reset();
+	wallTexture.Reset();
+	wallView.Reset();
+	///
+
+	//Reset Floor
+	m_vertexBuffer_floor.Reset();
+	m_indexBuffer_floor.Reset();
+	m_constantBuffer_floor.Reset();
+	floorTexture.Reset();
+	floorView.Reset();
+
+	m_DirBuffer_floor.Reset();
+	m_PointBuffer_floor.Reset();
+	m_SpotBuffer_floor.Reset();
+	///
+
+	//Reset Drone
+	m_vertexBuffer_drone.Reset();
+	m_indexBuffer_drone.Reset();
+	m_constantBuffer_drone.Reset();
+	droneTexture.Reset();
+	droneView.Reset();
 	///
 }
 

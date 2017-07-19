@@ -109,10 +109,22 @@
     <None Include="Assets\PropBarrel.dds">
       <Filter>Assets\Textures</Filter>
     </None>
-    <None Include="Assets\wolf.obj">
+    <None Include="Assets\floor.obj">
       <Filter>Assets\Models</Filter>
     </None>
-    <None Include="Assets\alphaWhiteR.dds">
+    <None Include="Assets\floor.dds">
+      <Filter>Assets\Textures</Filter>
+    </None>
+    <None Include="Assets\wall.dds">
+      <Filter>Assets\Textures</Filter>
+    </None>
+    <None Include="Assets\wall.obj">
+      <Filter>Assets\Models</Filter>
+    </None>
+    <None Include="Assets\drone.obj">
+      <Filter>Assets\Models</Filter>
+    </None>
+    <None Include="Assets\Skybox.dds">
       <Filter>Assets\Textures</Filter>
     </None>
   </ItemGroup>
