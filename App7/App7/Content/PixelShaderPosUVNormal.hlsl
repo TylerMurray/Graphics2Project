@@ -4,27 +4,28 @@ struct PixelShaderInput
 	float4 pos : SV_POSITION;
 	float2 uv : UV;
 	float3 normal : NORMAL;
+	float3 worldpos : POSITION;
 };
 
 cbuffer dir_light : register(b0)
 {
-	float3 dir_direction;
+	float4 dir_direction;
 	float4 dir_color;
 
 };
 
 cbuffer point_light : register(b1)
 {
-	float3 point_position;
+	float4 point_position;
 	float4 point_color;
 
 };
 
 cbuffer spot_light : register(b2)
 {
-	float3 spot_position;
-	float3 spot_coneDir;
-	float spot_coneRatio;
+	float4 spot_position;
+	float4 spot_coneDir;
+	float4 spot_coneRatio;
 	float4 spot_color;
 
 };
@@ -37,93 +38,83 @@ SamplerState filter : register(s0);
 // A pass-through function for the (interpolated) color data.
 float4 main(PixelShaderInput input) : SV_TARGET
 {
+	//0 in dir_direction.w = No lighting applied, 1 or higher = do that desired lighting
+	if (dir_direction.w == 0.0f)
+	{
+		return objTexture.Sample(filter, input.uv);
+	}
+	float4 dirResult = float4(0.0f, 0.0f, 0.0f, 0.0f);
+	float4 pointResult = float4(0.0f, 0.0f, 0.0f, 0.0f);
+	float4 spotResult = float4(0.0f, 0.0f, 0.0f, 0.0f);
+
+if (dir_direction.w >= 1.0f)
+{
 
 		//Directional Light	
 		float LightRatio;
-		float3 LightDir = dir_direction;
+		float3 LightDir = float3(dir_direction.x, dir_direction.y, dir_direction.z);
 		float3 SurfaceNormal = input.normal;
-		float4 dirResult;
-		float4 LightColor = dir_color;
+	
 		float4 SurfaceColor = objTexture.Sample(filter, input.uv);
+		float4 LightColor = dir_color;
 
 		LightRatio = clamp(dot(-normalize(LightDir), normalize(SurfaceNormal)), 0, 1);
 		dirResult = LightRatio * LightColor * SurfaceColor;
-		return dirResult;
-
-		//Point Lighting
-		float LightRatio1;
-		float3 SurfaceNormal1 = input.normal;
-		float4 pointResult;
-		float4 SurfaceColor1 = objTexture.Sample(filter, input.uv);
-		float3 LightDirection1;
-
-		LightDirection1 = normalize(point_position - input.pos);
-		LightRatio1 = clamp(dot(normalize(LightDirection1), normalize(SurfaceNormal1)), 0, 1);
-		pointResult = LightRatio1 * point_color * SurfaceColor1;
-		return pointResult;
-
-		//SpotLight Lighting
-
-		float3 SurfaceNormal2 = input.normal;	
-		float4 SurfaceColor2 = objTexture.Sample(filter, input.uv);
-
-		float3 LightDirection2 = normalize(spot_position - input.pos);
-		float SurfaceRatio2 = clamp(dot(-normalize(LightDirection2), normalize(spot_coneDir)), 0, 1);
-		float SpotFactor2 = (SurfaceRatio2 > spot_coneRatio) ? 1 : 0;
-		float LightRatio2 = clamp(dot(normalize(LightDirection2), normalize(SurfaceNormal2)), 0, 1);
-		float4 spotResult = SpotFactor2 * LightRatio2 * spot_color * SurfaceColor2;
-		//return spotResult;
-
+		//return dirResult;
+}
+if (point_position.w >= 1.0f)
+{
+	//Point Lighting
+	float3 LightDir1;
+	float3 LightPos1 = float3(point_position.x, point_position.y, point_position.z);
+	float3 SurfacePos1 = input.worldpos;
+	float LightRatio1;
+	float3 SurfaceNormal1 = input.normal;
 	
-	float4 finalResult = saturate(dirResult + pointResult + spotResult);
-	return objTexture.Sample(filter, input.uv) * finalResult;
+	float4 SurfaceColor1 = objTexture.Sample(filter, input.uv);
+	float4 LightColor1 = point_color;
 
-		////SpotLight Lighting (not working properly)
+	if (point_position.w == 1.1f)
+	{
+		LightPos1 = float3(input.worldpos.x + point_position.x, input.worldpos.y + point_position.y, input.worldpos.z + point_position.z);
+	}
+	float3 ToLight = LightPos1 - SurfacePos1;
+	float ToLightDis = length(ToLight);
+	//LightDir1 = normalize(LightPos1 - SurfacePos1);
+	LightDir1 = ToLight / ToLightDis;
+	float DisAtt = 1.0f - saturate(ToLightDis / 2.0f);
+	DisAtt *= DisAtt;
+	LightRatio1 = clamp(dot(normalize(LightDir1), normalize(SurfaceNormal1)), 0, 1);
+	pointResult = LightRatio1 * LightColor1 * SurfaceColor1 * DisAtt;
+	//return pointResult;
+}
 
-		//float LightRatio2;
-		//float3 SurfaceNormal2 = input.normal;
-		//float4 Result2;
-		//float4 SurfaceColor2 = objTexture.Sample(filter, input.uv);
-		//float3 LightDirection2;
-		//float SurfaceRatio2;
-		//float SpotFactor2;
-		//float3 spotPos = float3(0.0f, 1.0f, 0.0f);
-		//float3 spotConeDir = float3(1.0f, -1.0f, 0.0f);
-		//float spotConeRatio = 0.25f;
-		//float4 spotColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
+if (spot_position.w >= 1.0f)
+{
+	//SpotLight Lighting
+	float3 LightDir2;
+	float3 LightPos2 = float3(spot_position.x, spot_position.y, spot_position.z);
+	float3 SurfacePos2 = input.worldpos;
+	float3 SurfaceNormal2 = input.normal;
+	float4 SurfaceColor2 = objTexture.Sample(filter, input.uv);
+	float SurfaceRatio2;
+	float3 ConeDir = float3(spot_coneDir.x, spot_coneDir.y, spot_coneDir.z);
+	float SpotFactor2;
+	float ConeRatio = spot_coneRatio.x;
+	float LightRatio2;
+	float4 LightColor2 = spot_color;
 
-		//LightDirection2 = normalize(spotPos - input.pos);
-		//SurfaceRatio2 = clamp(dot(-normalize(LightDirection2), normalize(spotConeDir)), 0, 1);
-		//SpotFactor2 = (SurfaceRatio2 > spot_coneRatio) ? 1 : 0;
-		//LightRatio2 = clamp(dot(normalize(LightDirection2), normalize(SurfaceNormal2)), 0, 1);
-		//Result2 = SpotFactor2 * LightRatio2 * spotColor * SurfaceColor2;
-		//return Result2;
+	LightDir2 = normalize(LightPos2 - SurfacePos2);
+	SurfaceRatio2 = clamp(dot(-normalize(LightDir2), normalize(ConeDir)), 0, 1);
+	SpotFactor2 = (SurfaceRatio2 > ConeRatio) ? 1 : 0;
+	LightRatio2 = clamp(dot(normalize(LightDir2), normalize(SurfaceNormal2)), 0, 1);
+	spotResult = SpotFactor2 * LightRatio2 * LightColor2 * SurfaceColor2;
+	//return spotResult;
+}
+
+float4 finalResult = saturate(dirResult + pointResult + spotResult);
+return objTexture.Sample(filter, input.uv) * finalResult;
 
 
-	////Point Lighting (not working properly)
-	//float LightRatio1;
-	//float3 SurfaceNormal1 = input.normal;
-	//float4 Result1;
-	//float4 SurfaceColor1 = objTexture.Sample(filter, input.uv);
-	//float3 LightDirection1;
-	//float3 pointPos = float3(0.0f, 0.0f, 0.0f);
-	//float4 pointColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
-
-	//LightDirection1 = normalize(pointPos - input.pos);
-	//LightRatio1 = clamp(dot(normalize(LightDirection1), normalize(SurfaceNormal1)), 0, 1);
-	//Result1 = LightRatio1 * pointColor * SurfaceColor1;
-	//return Result1;
-
-	////Directional Light	
-	//float LightRatio;
- //   float3 LightDir = float3(1.0f, -1.0f, 0.0f);
-	//float3 SurfaceNormal = input.normal;
-	//float4 Result;
-	//float4 LightColor = float4(1.0f, 1.0f, 1.0f, 1.0f);
-	//float4 SurfaceColor = objTexture.Sample(filter, input.uv);
-	//
-	//LightRatio = clamp(dot(-normalize(LightDir), normalize(SurfaceNormal)),0, 1);
-	//Result = LightRatio * LightColor * SurfaceColor;
-	//return Result;
 
 }

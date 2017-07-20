@@ -87,13 +87,21 @@ namespace App7
 
 		ModelViewProjectionConstantBuffer m_constantBufferData_objModel;
 		uint32 m_indexCount_objModel;
+		float dirY_vend = -1.0f;
+		float dirX_vend = 0.0f;
+		bool flip_vend = false;
 	
 		//Texture Variables VendingMachine
 		Microsoft::WRL::ComPtr<ID3D11Texture2D> diffuseTexture; //Color data mapped across polygons
 		Microsoft::WRL::ComPtr<ID3D11Texture2D> vendingMachineTexture;
 		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> vendingMachineView;
 		Microsoft::WRL::ComPtr<ID3D11SamplerState> vendingMachineSampler;
-		
+		dir_light m_dirLight_objModel;
+		point_light m_pointLight_objModel;
+		spot_light m_spotLight_objModel;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_DirBuffer_objModel;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_PointBuffer_objModel;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_SpotBuffer_objModel;
 
 
 		//Wall
@@ -105,7 +113,12 @@ namespace App7
 
 		Microsoft::WRL::ComPtr<ID3D11Texture2D> wallTexture;
 		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> wallView;
-		
+		dir_light m_dirLight_wall;
+		point_light m_pointLight_wall;
+		spot_light m_spotLight_wall;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_DirBuffer_wall;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_PointBuffer_wall;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_SpotBuffer_wall;
 
 
 
@@ -118,6 +131,12 @@ namespace App7
 
 		Microsoft::WRL::ComPtr<ID3D11Texture2D> alienTexture;
 		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> alienView;
+		dir_light m_dirLight_alien;
+		point_light m_pointLight_alien;
+		spot_light m_spotLight_alien;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_DirBuffer_alien;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_PointBuffer_alien;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_SpotBuffer_alien;
 
 		//Barrel
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_barrel;
@@ -128,7 +147,12 @@ namespace App7
 
 		Microsoft::WRL::ComPtr<ID3D11Texture2D> barrelTexture;
 		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> barrelView;
-
+		dir_light m_dirLight_barrel;
+		point_light m_pointLight_barrel;
+		spot_light m_spotLight_barrel;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_DirBuffer_barrel;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_PointBuffer_barrel;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_SpotBuffer_barrel;
 
 		//floor
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_floor;
@@ -150,7 +174,7 @@ namespace App7
 
 		float dirY_floor = -1.0f;
 		float dirX_floor = 0.0f;
-		bool flip = false;
+		bool flip_floor = false;
 
 
 
@@ -163,6 +187,12 @@ namespace App7
 
 		Microsoft::WRL::ComPtr<ID3D11Texture2D> droneTexture;
 		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> droneView;
+		dir_light m_dirLight_drone;
+		point_light m_pointLight_drone;
+		spot_light m_spotLight_drone;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_DirBuffer_drone;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_PointBuffer_drone;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_SpotBuffer_drone;
 		///
 	};
 }

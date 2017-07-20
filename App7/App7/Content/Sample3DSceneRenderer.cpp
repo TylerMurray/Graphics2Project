@@ -111,7 +111,7 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 
 	///
 	XMMATRIX newcamera = XMLoadFloat4x4(&camera);
-
+	
 	if (buttons['W'])
 	{
 		newcamera.r[3] = newcamera.r[3] + newcamera.r[2] * timer.GetElapsedSeconds() * 5.0;
@@ -159,11 +159,12 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 	///
 
 	///
-	
+	XMVECTOR camPos = newcamera.r[3];
+	XMFLOAT3 camDir = XMFLOAT3(m_constantBufferData.view._31, m_constantBufferData.view._32, m_constantBufferData.view._33);
 	//Rotations
 	//3.14159 = 180 degrees
 	//1.5708 = 90 degrees
-
+	
 	//Pyramid
 	m_constantBufferData_Pyramid = m_constantBufferData;
 	XMStoreFloat4x4(&m_constantBufferData_Pyramid.model, XMMatrixTranspose(XMMatrixTranslation(0.0f, -2.0f, 0.0f)*XMMatrixRotationX(3.14159f))); 
@@ -171,72 +172,117 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 	//wall																																			 
 	m_constantBufferData_wall = m_constantBufferData;
 	XMStoreFloat4x4(&m_constantBufferData_wall.model, XMMatrixTranspose(XMMatrixTranslation(-2.75f, 0.0f, 0.0f)*XMMatrixRotationY(3.14159f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
+	XMStoreFloat4(&m_dirLight_wall.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 1.0f });
+	XMStoreFloat4(&m_dirLight_wall.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
 
+	XMStoreFloat4(&m_pointLight_wall.point_position, XMVECTOR{ dirX_vend + 1000.0f, dirY_vend + 250.0f, dirX_vend * 10.0f, 0.0f });
+	XMStoreFloat4(&m_pointLight_wall.point_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
 
 	//VendingMachine
 	m_constantBufferData_objModel = m_constantBufferData;
 	XMStoreFloat4x4(&m_constantBufferData_objModel.model, XMMatrixTranspose(XMMatrixTranslation(-1.0f, -15.0f, -41.0f) * XMMatrixScaling(0.25f,0.25f,0.25f)*XMMatrixRotationY(-1.5708f)));
+	if (flip_vend == false)
+	{
+		dirY_vend += timer.GetElapsedSeconds() * 0.3f;
+		dirX_vend += timer.GetElapsedSeconds() * 0.3f;
+	}
+	else
+	{
+		dirY_vend -= timer.GetElapsedSeconds() * 0.3f;
+		dirX_vend -= timer.GetElapsedSeconds() * 0.3f;
+	}
+
+	if (dirY_vend > 0.0f)
+	{
+		//dirY_floor = -1.0f;
+		flip_vend = true;
+	}
+	if (dirX_vend > 1.0f)
+	{
+		//dirX_floor = 0.0f;
+		flip_vend = true;
+	}
+	if (dirY_vend < -1.0f)
+	{
+		//dirY_floor = -1.0f;
+		flip_vend = false;
+	}
+	if (dirX_vend < 0.0f)
+	{
+		//dirX_floor = 0.0f;
+		flip_vend = false;
+	}
+	XMStoreFloat4(&m_dirLight_objModel.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 1.0f });
+	XMStoreFloat4(&m_dirLight_objModel.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+
+	XMStoreFloat4(&m_pointLight_objModel.point_position, XMVECTOR{ dirX_vend + 3.0f, dirX_vend + 3.0f, dirY_vend * 10.0f, 1.1f });
+	XMStoreFloat4(&m_pointLight_objModel.point_color, XMVECTOR{ 1.0f, 1.0f, 0.0f, 1.0f });
+
+	XMStoreFloat4(&m_spotLight_objModel.spot_position, XMVECTOR{ 0.0f, 0.0f, 0.0f, 0.0f });
+	XMStoreFloat4(&m_spotLight_objModel.spot_color, XMVECTOR{ 1.0f, 0.0f, 1.0f, 1.0f });
+	XMStoreFloat4(&m_spotLight_objModel.spot_coneDir, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 0.0f });
+	XMStoreFloat4(&m_spotLight_objModel.spot_coneRatio, XMVECTOR{ 0.5f, 0.0f, 0.0f, 0.0f });
 
 	//Alien
 	m_constantBufferData_alien = m_constantBufferData;
 	XMStoreFloat4x4(&m_constantBufferData_alien.model, XMMatrixTranspose(XMMatrixTranslation(-8.0f, -4.0f, 0.0f)*XMMatrixRotationY(3.14159f)* XMMatrixScaling(0.9f, 0.9f, 0.9f)));
+	XMStoreFloat4(&m_dirLight_alien.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 0.0f });
+	XMStoreFloat4(&m_dirLight_alien.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
 	///
 
 	//Barrel
 	m_constantBufferData_barrel = m_constantBufferData;
 	XMStoreFloat4x4(&m_constantBufferData_barrel.model, XMMatrixTranspose(XMMatrixTranslation(13.5f, -4.75f, 2.75f)* XMMatrixScaling(0.75f, 0.75f, 0.75f)));
+	XMStoreFloat4(&m_dirLight_barrel.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 0.0f });
+	XMStoreFloat4(&m_dirLight_barrel.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
 
 	//floor
 	m_constantBufferData_floor = m_constantBufferData;
 	XMStoreFloat4x4(&m_constantBufferData_floor.model, XMMatrixTranspose(XMMatrixTranslation(1.75f, -1.2f, 0.0f)* XMMatrixScaling(5.0f, 5.0f, 5.0f)));
-
-	if (flip == false)
+	if (flip_floor == false)
 	{
-		dirY_floor += timer.GetElapsedSeconds() * 0.2f;
-		dirX_floor += timer.GetElapsedSeconds() * 0.2f;
+		dirY_floor += timer.GetElapsedSeconds() * 0.15f;
+		dirX_floor += timer.GetElapsedSeconds() * 0.15f;
 	}
 	else
 	{
-		dirY_floor -= timer.GetElapsedSeconds() * 0.2f;
-		dirX_floor -= timer.GetElapsedSeconds() * 0.2f;
+		dirY_floor -= timer.GetElapsedSeconds() * 0.15f;
+		dirX_floor -= timer.GetElapsedSeconds() * 0.15f;
 	}
 
 	if (dirY_floor > 0.0f)
 	{
-		//dirY_floor = -1.0f;
-		flip = true;
+		flip_floor = true;
 	}
 	if (dirX_floor > 1.0f)
 	{
-		//dirX_floor = 0.0f;
-		flip = true;
+		flip_floor = true;
 	}
 	if (dirY_floor < -1.0f)
 	{
-		//dirY_floor = -1.0f;
-		flip = false;
+		flip_floor = false;
 	}
 	if (dirX_floor < 0.0f)
 	{
-		//dirX_floor = 0.0f;
-		flip = false;
+		flip_floor = false;
 	}
+	XMStoreFloat4(&m_dirLight_floor.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 0.1f });
+	XMStoreFloat4(&m_dirLight_floor.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
 
-	m_dirLight_floor.dir_direction = XMFLOAT3{ dirX_floor, dirY_floor, 0.0f };
-	m_dirLight_floor.dir_color = XMFLOAT4{ 1.0f, 1.0f, 1.0f, 1.0f };
+	XMStoreFloat4(&m_pointLight_floor.point_position, XMVECTOR{ dirX_floor, 1.0f, 0.0f, 1.1f });
+	XMStoreFloat4(&m_pointLight_floor.point_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f }); 
 
-	m_pointLight_floor.point_position = XMFLOAT3{ dirX_floor + 5.0f, dirY_floor, 0.0f };
-	m_pointLight_floor.point_color = XMFLOAT4{ 1.0f, 1.0f, 1.0f, 1.0f };
+	XMStoreFloat4(&m_spotLight_floor.spot_position, XMVECTOR{ XMVectorGetX(camPos), XMVectorGetY(camPos), XMVectorGetZ(camPos), 0.0f });
+	XMStoreFloat4(&m_spotLight_floor.spot_color, XMVECTOR{ 1.0f, 0.0f, 1.0f, 1.0f });
+	XMStoreFloat4(&m_spotLight_floor.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
+	XMStoreFloat4(&m_spotLight_floor.spot_coneRatio, XMVECTOR{ 0.5f, 0.0f, 0.0f, 0.0f });
 
-	m_spotLight_floor.spot_position = XMFLOAT3{ dirX_floor, dirY_floor, 0.0f };
-	m_spotLight_floor.spot_color = XMFLOAT4{ 1.0f, 1.0f, 1.0f, 1.0f };
-	m_spotLight_floor.spot_coneDir = XMFLOAT3{ dirX_floor, dirY_floor, 0.0f };
-	m_spotLight_floor.spot_coneRatio = 0.25f;
 
 	//Drone
 	m_constantBufferData_drone = m_constantBufferData;
 	XMStoreFloat4x4(&m_constantBufferData_drone.model, XMMatrixTranspose(XMMatrixScaling(0.005f, 0.005f, 0.005f)*newcamera*XMMatrixTranslation(0.0f, -0.5f, 0.0f)));
-	
+	XMStoreFloat4(&m_dirLight_drone.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 0.0f });
+	XMStoreFloat4(&m_dirLight_drone.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
 
 }
 
@@ -396,7 +442,7 @@ void Sample3DSceneRenderer::Render()
 
 	//Start of objModel VendingMachine
 	context->UpdateSubresource1(
-		m_constantBuffer.Get(),
+		m_constantBuffer_objModel.Get(),
 		0,
 		NULL,
 		&m_constantBufferData_objModel,
@@ -404,7 +450,36 @@ void Sample3DSceneRenderer::Render()
 		0,
 		0
 	);
-
+	//update dir_buffer
+	context->UpdateSubresource1(
+	m_DirBuffer_objModel.Get(),
+	0,
+	NULL,
+	&m_dirLight_objModel,
+	0,
+	0,
+	0
+	);
+	//update point_buffer
+	context->UpdateSubresource1(
+		m_PointBuffer_objModel.Get(),
+		0,
+		NULL,
+		&m_pointLight_objModel,
+		0,
+		0,
+		0
+	);
+	//update spot_buffer
+	context->UpdateSubresource1(
+		m_SpotBuffer_objModel.Get(),
+		0,
+		NULL,
+		&m_spotLight_objModel,
+		0,
+		0,
+		0
+	);
 	stride = sizeof(VertexPositionUVNORMAL);
 	context->IASetVertexBuffers(
 		0,
@@ -436,8 +511,43 @@ void Sample3DSceneRenderer::Render()
 		0
 	);
 	
+	context->VSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_objModel.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_objModel.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	//Set lighting buffers
+	context->PSSetConstantBuffers1(
+	0,
+	1,
+	m_DirBuffer_objModel.GetAddressOf(),
+	nullptr,
+	nullptr
+	);
+	context->PSSetConstantBuffers1(
+	1,
+	1,
+	m_PointBuffer_objModel.GetAddressOf(),
+	nullptr,
+	nullptr
+	);
+	context->PSSetConstantBuffers1(
+		2,
+		1,
+		m_SpotBuffer_objModel.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
 
-	//ID3D11ShaderResourceView* texViews[] = { environmentView };
 	context->PSSetShaderResources(0, 1, vendingMachineView.GetAddressOf());
 	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf());
 
@@ -453,7 +563,7 @@ void Sample3DSceneRenderer::Render()
 
 	//Draw Barrel//
 	context->UpdateSubresource1(
-		m_constantBuffer.Get(),
+		m_constantBuffer_barrel.Get(),
 		0,
 		NULL,
 		&m_constantBufferData_barrel,
@@ -461,7 +571,36 @@ void Sample3DSceneRenderer::Render()
 		0,
 		0
 	);
-
+	//update dir_buffer
+	context->UpdateSubresource1(
+		m_DirBuffer_barrel.Get(),
+		0,
+		NULL,
+		&m_dirLight_barrel,
+		0,
+		0,
+		0
+	);
+	//update point_buffer
+	//context->UpdateSubresource1(
+	//	m_PointBuffer_barrel.Get(),
+	//	0,
+	//	NULL,
+	//	&m_pointLight_barrel,
+	//	0,
+	//	0,
+	//	0
+	//);
+	////update spot_buffer
+	/*context->UpdateSubresource1(
+	m_SpotBuffer_barrel.Get(),
+	0,
+	NULL,
+	&m_spotLight_barrel,
+	0,
+	0,
+	0
+	);*/
 	stride = sizeof(VertexPositionUVNORMAL);
 	context->IASetVertexBuffers(
 		0,
@@ -493,7 +632,43 @@ void Sample3DSceneRenderer::Render()
 		0
 	); //Thats fine using same shader
 
+	context->VSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_barrel.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
 
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_barrel.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	//Set lighting buffers
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_DirBuffer_barrel.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	/*context->PSSetConstantBuffers1(
+	0,
+	1,
+	m_PointBuffer_barrel.GetAddressOf(),
+	nullptr,
+	nullptr
+	);*/
+	/*context->PSSetConstantBuffers1(
+	0,
+	1,
+	m_SpotBuffer_barrel.GetAddressOf(),
+	nullptr,
+	nullptr
+	);*/
 	context->PSSetShaderResources(0, 1, barrelView.GetAddressOf());
 	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf()); //thats fine using same sampler
 
@@ -506,7 +681,7 @@ void Sample3DSceneRenderer::Render()
 
 	//Draw wall//
 	context->UpdateSubresource1(
-		m_constantBuffer.Get(),
+		m_constantBuffer_wall.Get(),
 		0,
 		NULL,
 		&m_constantBufferData_wall,
@@ -514,7 +689,36 @@ void Sample3DSceneRenderer::Render()
 		0,
 		0
 	);
-
+	//update dir_buffer
+	context->UpdateSubresource1(
+		m_DirBuffer_wall.Get(),
+		0,
+		NULL,
+		&m_dirLight_wall,
+		0,
+		0,
+		0
+	);
+	//update point_buffer
+	//context->UpdateSubresource1(
+	//	m_PointBuffer_wall.Get(),
+	//	0,
+	//	NULL,
+	//	&m_pointLight_wall,
+	//	0,
+	//	0,
+	//	0
+	//);
+	////update spot_buffer
+	/*context->UpdateSubresource1(
+	m_SpotBuffer_wall.Get(),
+	0,
+	NULL,
+	&m_spotLight_wall,
+	0,
+	0,
+	0
+	);*/
 	stride = sizeof(VertexPositionUVNORMAL);
 	context->IASetVertexBuffers(
 		0,
@@ -546,7 +750,42 @@ void Sample3DSceneRenderer::Render()
 		0
 	); //Thats fine using same shader
 
-
+	context->VSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_wall.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_wall.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	//Set lighting buffers
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_DirBuffer_wall.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	/*context->PSSetConstantBuffers1(
+	0,
+	1,
+	m_PointBuffer_wall.GetAddressOf(),
+	nullptr,
+	nullptr
+	);*/
+	/*context->PSSetConstantBuffers1(
+	0,
+	1,
+	m_SpotBuffer_wall.GetAddressOf(),
+	nullptr,
+	nullptr
+	);*/
 	context->PSSetShaderResources(0, 1, wallView.GetAddressOf());
 	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf()); //thats fine using same sampler
 
@@ -558,7 +797,7 @@ void Sample3DSceneRenderer::Render()
 
 	//Draw floor//
 	context->UpdateSubresource1(
-		m_constantBuffer.Get(),
+		m_constantBuffer_floor.Get(),
 		0,
 		NULL,
 		&m_constantBufferData_floor,
@@ -569,7 +808,7 @@ void Sample3DSceneRenderer::Render()
 
 	//update dir_buffer
 	context->UpdateSubresource1(
-		m_constantBuffer_floor.Get(),
+		m_DirBuffer_floor.Get(),
 		0,
 		NULL,
 		&m_dirLight_floor,
@@ -577,26 +816,26 @@ void Sample3DSceneRenderer::Render()
 		0,
 		0
 	);
-	////update point_buffer
-	//context->UpdateSubresource1(
-	//	m_PointBuffer_floor.Get(),
-	//	0,
-	//	NULL,
-	//	&m_pointLight_floor,
-	//	0,
-	//	0,
-	//	0
-	//);
-	////update spot_buffer
-	//context->UpdateSubresource1(
-	//	m_SpotBuffer_floor.Get(),
-	//	0,
-	//	NULL,
-	//	&m_spotLight_floor,
-	//	0,
-	//	0,
-	//	0
-	//);
+	//update point_buffer
+	context->UpdateSubresource1(
+		m_PointBuffer_floor.Get(),
+		0,
+		NULL,
+		&m_pointLight_floor,
+		0,
+		0,
+		0
+	);
+	//update spot_buffer
+	context->UpdateSubresource1(
+		m_SpotBuffer_floor.Get(),
+		0,
+		NULL,
+		&m_spotLight_floor,
+		0,
+		0,
+		0
+	);
 
 	stride = sizeof(VertexPositionUVNORMAL);
 	context->IASetVertexBuffers(
@@ -629,6 +868,14 @@ void Sample3DSceneRenderer::Render()
 		0
 	); //Thats fine using same shader
 
+	context->VSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_floor.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
 	context->PSSetConstantBuffers1(
 		0,
 		1,
@@ -638,27 +885,27 @@ void Sample3DSceneRenderer::Render()
 	);
 
 	//Set lighting buffers
-	//context->PSSetConstantBuffers1(
-	//	0,
-	//	1,
-	//	m_DirBuffer_floor.GetAddressOf(),
-	//	nullptr,
-	//	nullptr
-	//);
-	//context->PSSetConstantBuffers1(
-	//	0,
-	//	1,
-	//	m_PointBuffer_floor.GetAddressOf(),
-	//	nullptr,
-	//	nullptr
-	//);
-	//context->PSSetConstantBuffers1(
-	//	0,
-	//	1,
-	//	m_SpotBuffer_floor.GetAddressOf(),
-	//	nullptr,
-	//	nullptr
-	//);
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_DirBuffer_floor.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		1,
+		1,
+		m_PointBuffer_floor.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		2,
+		1,
+		m_SpotBuffer_floor.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
 	
 
 	context->PSSetShaderResources(0, 1, floorView.GetAddressOf());
@@ -673,7 +920,7 @@ void Sample3DSceneRenderer::Render()
 
 	//Draw drone//
 	context->UpdateSubresource1(
-		m_constantBuffer.Get(),
+		m_constantBuffer_drone.Get(),
 		0,
 		NULL,
 		&m_constantBufferData_drone,
@@ -681,7 +928,36 @@ void Sample3DSceneRenderer::Render()
 		0,
 		0
 	);
-
+	//update dir_buffer
+	context->UpdateSubresource1(
+		m_DirBuffer_drone.Get(),
+		0,
+		NULL,
+		&m_dirLight_drone,
+		0,
+		0,
+		0
+	);
+	//update point_buffer
+	//context->UpdateSubresource1(
+	//	m_PointBuffer_drone.Get(),
+	//	0,
+	//	NULL,
+	//	&m_pointLight_drone,
+	//	0,
+	//	0,
+	//	0
+	//);
+	////update spot_buffer
+	/*context->UpdateSubresource1(
+	m_SpotBuffer_drone.Get(),
+	0,
+	NULL,
+	&m_spotLight_drone,
+	0,
+	0,
+	0
+	);*/
 	stride = sizeof(VertexPositionUVNORMAL);
 	context->IASetVertexBuffers(
 		0,
@@ -713,7 +989,42 @@ void Sample3DSceneRenderer::Render()
 		0
 	); //Thats fine using same shader
 
-
+	context->VSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_drone.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_drone.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	//Set lighting buffers
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_DirBuffer_drone.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	//context->PSSetConstantBuffers1(
+	//	0,
+	//	1,
+	//	m_PointBuffer_drone.GetAddressOf(),
+	//	nullptr,
+	//	nullptr
+	//);
+	//context->PSSetConstantBuffers1(
+	//	0,
+	//	1,
+	//	m_SpotBuffer_drone.GetAddressOf(),
+	//	nullptr,
+	//	nullptr
+	//);
 	context->PSSetShaderResources(0, 1, droneView.GetAddressOf());
 	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf()); //thats fine using same sampler
 
@@ -727,7 +1038,7 @@ void Sample3DSceneRenderer::Render()
 
 	//Draw Alien//
 	context->UpdateSubresource1(
-		m_constantBuffer.Get(),
+		m_constantBuffer_alien.Get(),
 		0,
 		NULL,
 		&m_constantBufferData_alien,
@@ -735,7 +1046,36 @@ void Sample3DSceneRenderer::Render()
 		0,
 		0
 	);
-
+	//update dir_buffer
+	context->UpdateSubresource1(
+		m_DirBuffer_alien.Get(),
+		0,
+		NULL,
+		&m_dirLight_alien,
+		0,
+		0,
+		0
+	);
+	//update point_buffer
+	//context->UpdateSubresource1(
+	//	m_PointBuffer_alien.Get(),
+	//	0,
+	//	NULL,
+	//	&m_pointLight_alien,
+	//	0,
+	//	0,
+	//	0
+	//);
+	////update spot_buffer
+	/*context->UpdateSubresource1(
+	m_SpotBuffer_alien.Get(),
+	0,
+	NULL,
+	&m_spotLight_alien,
+	0,
+	0,
+	0
+	);*/
 	stride = sizeof(VertexPositionUVNORMAL);
 	context->IASetVertexBuffers(
 		0,
@@ -767,7 +1107,42 @@ void Sample3DSceneRenderer::Render()
 		0
 	); //Thats fine using same shader
 
-
+	context->VSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_alien.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_alien.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	//Set lighting buffers
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_DirBuffer_alien.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	//context->PSSetConstantBuffers1(
+	//	0,
+	//	1,
+	//	m_PointBuffer_alien.GetAddressOf(),
+	//	nullptr,
+	//	nullptr
+	//);
+	//context->PSSetConstantBuffers1(
+	//	0,
+	//	1,
+	//	m_SpotBuffer_alien.GetAddressOf(),
+	//	nullptr,
+	//	nullptr
+	//);
 	context->PSSetShaderResources(0, 1, alienView.GetAddressOf());
 	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf()); //thats fine using same sampler
 
@@ -1052,6 +1427,30 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 						&m_constantBuffer_objModel
 					)
 				);
+				CD3D11_BUFFER_DESC DirBufferDesc_objModel(sizeof(dir_light), D3D11_BIND_CONSTANT_BUFFER);
+				DX::ThrowIfFailed(
+					m_deviceResources->GetD3DDevice()->CreateBuffer(
+						&DirBufferDesc_objModel,
+						nullptr,
+						&m_DirBuffer_objModel
+					)
+				);
+				CD3D11_BUFFER_DESC PointBufferDesc_objModel(sizeof(point_light), D3D11_BIND_CONSTANT_BUFFER);
+				DX::ThrowIfFailed(
+					m_deviceResources->GetD3DDevice()->CreateBuffer(
+						&PointBufferDesc_objModel,
+						nullptr,
+						&m_PointBuffer_objModel
+					)
+				);
+				CD3D11_BUFFER_DESC SpotBufferDesc_objModel(sizeof(spot_light), D3D11_BIND_CONSTANT_BUFFER);
+				DX::ThrowIfFailed(
+					m_deviceResources->GetD3DDevice()->CreateBuffer(
+						&SpotBufferDesc_objModel,
+						nullptr,
+						&m_SpotBuffer_objModel
+					)
+				);
 			});
 
 
@@ -1126,6 +1525,31 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 					&m_constantBuffer_barrel
 				)
 			);
+			CD3D11_BUFFER_DESC DirBufferDesc_barrel(sizeof(dir_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&DirBufferDesc_barrel,
+					nullptr,
+					&m_DirBuffer_barrel
+				)
+			);
+			CD3D11_BUFFER_DESC PointBufferDesc_barrel(sizeof(point_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&PointBufferDesc_barrel,
+					nullptr,
+					&m_PointBuffer_barrel
+				)
+			);
+			CD3D11_BUFFER_DESC SpotBufferDesc_barrel(sizeof(spot_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&SpotBufferDesc_barrel,
+					nullptr,
+					&m_SpotBuffer_barrel
+				)
+			);
+
 
 
 
@@ -1183,6 +1607,30 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 					&constantBufferDesc_wall,
 					nullptr,
 					&m_constantBuffer_wall
+				)
+			);
+			CD3D11_BUFFER_DESC DirBufferDesc_wall(sizeof(dir_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&DirBufferDesc_wall,
+					nullptr,
+					&m_DirBuffer_wall
+				)
+			);
+			CD3D11_BUFFER_DESC PointBufferDesc_wall(sizeof(point_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&PointBufferDesc_wall,
+					nullptr,
+					&m_PointBuffer_wall
+				)
+			);
+			CD3D11_BUFFER_DESC SpotBufferDesc_wall(sizeof(spot_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&SpotBufferDesc_wall,
+					nullptr,
+					&m_SpotBuffer_wall
 				)
 			);
 
@@ -1244,7 +1692,7 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 					&m_constantBuffer_floor
 				)
 			);
-			/*CD3D11_BUFFER_DESC DirBufferDesc_floor(sizeof(dir_light), D3D11_BIND_CONSTANT_BUFFER);
+			CD3D11_BUFFER_DESC DirBufferDesc_floor(sizeof(dir_light), D3D11_BIND_CONSTANT_BUFFER);
 			DX::ThrowIfFailed(
 				m_deviceResources->GetD3DDevice()->CreateBuffer(
 					&DirBufferDesc_floor,
@@ -1267,7 +1715,7 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 					nullptr,
 					&m_SpotBuffer_floor
 				)
-			);*/
+			);
 
 			//Data setup//
 			D3D11_SUBRESOURCE_DATA vertexBufferData_floor = { 0 };
@@ -1324,6 +1772,30 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 					&constantBufferDesc_drone,
 					nullptr,
 					&m_constantBuffer_drone
+				)
+			);
+			CD3D11_BUFFER_DESC DirBufferDesc_drone(sizeof(dir_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&DirBufferDesc_drone,
+					nullptr,
+					&m_DirBuffer_drone
+				)
+			);
+			CD3D11_BUFFER_DESC PointBufferDesc_drone(sizeof(point_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&PointBufferDesc_drone,
+					nullptr,
+					&m_PointBuffer_drone
+				)
+			);
+			CD3D11_BUFFER_DESC SpotBufferDesc_drone(sizeof(spot_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&SpotBufferDesc_drone,
+					nullptr,
+					&m_SpotBuffer_drone
 				)
 			);
 
@@ -1386,6 +1858,30 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 					&constantBufferDesc_alien,
 					nullptr,
 					&m_constantBuffer_alien
+				)
+			);
+			CD3D11_BUFFER_DESC DirBufferDesc_alien(sizeof(dir_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&DirBufferDesc_alien,
+					nullptr,
+					&m_DirBuffer_alien
+				)
+			);
+			CD3D11_BUFFER_DESC PointBufferDesc_alien(sizeof(point_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&PointBufferDesc_alien,
+					nullptr,
+					&m_PointBuffer_alien
+				)
+			);
+			CD3D11_BUFFER_DESC SpotBufferDesc_alien(sizeof(spot_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&SpotBufferDesc_alien,
+					nullptr,
+					&m_SpotBuffer_alien
 				)
 			);
 
@@ -1467,6 +1963,9 @@ void Sample3DSceneRenderer::ReleaseDeviceDependentResources()
 	vendingMachineView.Reset();
 	vendingMachineSampler.Reset();
 
+	m_DirBuffer_objModel.Reset();
+	m_PointBuffer_objModel.Reset();
+	m_SpotBuffer_objModel.Reset();
 
 	
 
@@ -1477,6 +1976,10 @@ void Sample3DSceneRenderer::ReleaseDeviceDependentResources()
 	alienTexture.Reset();
 	alienView.Reset();
 
+	m_DirBuffer_alien.Reset();
+	m_PointBuffer_alien.Reset();
+	m_SpotBuffer_alien.Reset();
+
 	//Reset Barrel
 	m_vertexBuffer_barrel.Reset();
 	m_indexBuffer_barrel.Reset();
@@ -1484,12 +1987,20 @@ void Sample3DSceneRenderer::ReleaseDeviceDependentResources()
 	barrelTexture.Reset();
 	barrelView.Reset();
 
+	m_DirBuffer_barrel.Reset();
+	m_PointBuffer_barrel.Reset();
+	m_SpotBuffer_barrel.Reset();
+
 	//Reset Wall
 	m_vertexBuffer_wall.Reset();
 	m_indexBuffer_wall.Reset();
 	m_constantBuffer_wall.Reset();
 	wallTexture.Reset();
 	wallView.Reset();
+
+	m_DirBuffer_wall.Reset();
+	m_PointBuffer_wall.Reset();
+	m_SpotBuffer_wall.Reset();
 	///
 
 	//Reset Floor
@@ -1510,6 +2021,10 @@ void Sample3DSceneRenderer::ReleaseDeviceDependentResources()
 	m_constantBuffer_drone.Reset();
 	droneTexture.Reset();
 	droneView.Reset();
+
+	m_DirBuffer_drone.Reset();
+	m_PointBuffer_drone.Reset();
+	m_SpotBuffer_drone.Reset();
 	///
 }
 
