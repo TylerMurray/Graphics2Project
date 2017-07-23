@@ -32,6 +32,8 @@ namespace App7
 		///
 		bool LoadOBJModel(const char* path, std::vector <VertexPositionUVNORMAL> &out_verts, std::vector <unsigned int> &out_indices);
 
+		bool LoadSkyBox(const char * path, std::vector<VertexPositionUVNORMAL>& out_verts, std::vector<unsigned int>& out_indices);
+
 
 		///
 
@@ -193,6 +195,22 @@ namespace App7
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_DirBuffer_drone;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_PointBuffer_drone;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_SpotBuffer_drone;
+
+		//Skybox
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_sky;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer_sky;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer_sky;
+		ModelViewProjectionConstantBuffer m_constantBufferData_sky;
+		uint32 m_indexCount_sky;
+
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> skyTexture;
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> skyView;
+		dir_light m_dirLight_sky;
+		point_light m_pointLight_sky;
+		spot_light m_spotLight_sky;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_DirBuffer_sky;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_PointBuffer_sky;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_SpotBuffer_sky;
 		///
 	};
 }

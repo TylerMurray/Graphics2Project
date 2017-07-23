@@ -284,6 +284,12 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 	XMStoreFloat4(&m_dirLight_drone.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 0.0f });
 	XMStoreFloat4(&m_dirLight_drone.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
 
+	//Skybox
+	m_constantBufferData_sky = m_constantBufferData;
+	XMStoreFloat4x4(&m_constantBufferData_sky.model, XMMatrixTranspose(XMMatrixScaling(100.0f, 100.0f, 100.0f)*XMMatrixTranslation(XMVectorGetX(camPos), XMVectorGetY(camPos), XMVectorGetZ(camPos))));
+	XMStoreFloat4(&m_dirLight_drone.dir_direction, XMVECTOR{ 0.0f, 0.0f, 0.0f, 0.0f });
+	XMStoreFloat4(&m_dirLight_drone.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+
 }
 
 // Rotate the 3D cube model a set amount of radians.
@@ -1035,6 +1041,122 @@ void Sample3DSceneRenderer::Render()
 	);
 	///
 
+	//Draw Skybox//
+	context->UpdateSubresource1(
+		m_constantBuffer_sky.Get(),
+		0,
+		NULL,
+		&m_constantBufferData_sky,
+		0,
+		0,
+		0
+	);
+	//update dir_buffer
+	context->UpdateSubresource1(
+		m_DirBuffer_sky.Get(),
+		0,
+		NULL,
+		&m_dirLight_sky,
+		0,
+		0,
+		0
+	);
+	//update point_buffer
+	//context->UpdateSubresource1(
+	//	m_PointBuffer_sky.Get(),
+	//	0,
+	//	NULL,
+	//	&m_pointLight_sky,
+	//	0,
+	//	0,
+	//	0
+	//);
+	////update spot_buffer
+	/*context->UpdateSubresource1(
+	m_SpotBuffer_sky.Get(),
+	0,
+	NULL,
+	&m_spotLight_sky,
+	0,
+	0,
+	0
+	);*/
+	stride = sizeof(VertexPositionUVNORMAL);
+	context->IASetVertexBuffers(
+		0,
+		1,
+		m_vertexBuffer_sky.GetAddressOf(),
+		&stride,
+		&offset
+	);
+
+	context->IASetIndexBuffer(
+		m_indexBuffer_sky.Get(),
+		DXGI_FORMAT_R32_UINT,
+		0
+	);
+
+	context->IASetInputLayout(m_inputLayout_objModel.Get()); //Thats fine using same layout
+
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	context->VSSetShader(
+		m_vertexShader_objModel.Get(),
+		nullptr,
+		0
+	); //Thats fine using same shader
+
+	context->PSSetShader(
+		m_pixelShader_objModel.Get(),
+		nullptr,
+		0
+	); //Thats fine using same shader
+
+	context->VSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_sky.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_sky.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	//Set lighting buffers
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_DirBuffer_sky.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	//context->PSSetConstantBuffers1(
+	//	0,
+	//	1,
+	//	m_PointBuffer_sky.GetAddressOf(),
+	//	nullptr,
+	//	nullptr
+	//);
+	//context->PSSetConstantBuffers1(
+	//	0,
+	//	1,
+	//	m_SpotBuffer_sky.GetAddressOf(),
+	//	nullptr,
+	//	nullptr
+	//);
+	context->PSSetShaderResources(0, 1, skyView.GetAddressOf());
+	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf()); //thats fine using same sampler
+
+	context->DrawIndexed(
+		m_indexCount_sky,
+		0,
+		0
+	);
+	///
 
 	//Draw Alien//
 	context->UpdateSubresource1(
@@ -1838,6 +1960,91 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 
 /////////////////////////////////////////////End of Drone////////////////////////////////////
 
+//////////////////////////////////////////Start of Skybox//////////////////////////////////////////////
+
+//Load in obj file and get info//
+		std::vector<VertexPositionUVNORMAL> skyVertices;
+		std::vector<unsigned int> skyIndices;
+
+		bool res7 = LoadSkyBox("Assets/Skybox.obj", skyVertices, skyIndices);
+
+		m_indexCount_sky = skyIndices.size();
+
+
+		if (res7 == true)
+		{
+			CD3D11_BUFFER_DESC constantBufferDesc_sky(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&constantBufferDesc_sky,
+					nullptr,
+					&m_constantBuffer_sky
+				)
+			);
+			CD3D11_BUFFER_DESC DirBufferDesc_sky(sizeof(dir_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&DirBufferDesc_sky,
+					nullptr,
+					&m_DirBuffer_sky
+				)
+			);
+			CD3D11_BUFFER_DESC PointBufferDesc_sky(sizeof(point_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&PointBufferDesc_sky,
+					nullptr,
+					&m_PointBuffer_sky
+				)
+			);
+			CD3D11_BUFFER_DESC SpotBufferDesc_sky(sizeof(spot_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&SpotBufferDesc_sky,
+					nullptr,
+					&m_SpotBuffer_sky
+				)
+			);
+
+
+
+			//Data setup//
+			D3D11_SUBRESOURCE_DATA vertexBufferData_sky = { 0 };
+			vertexBufferData_sky.pSysMem = skyVertices.data();
+			vertexBufferData_sky.SysMemPitch = 0;
+			vertexBufferData_sky.SysMemSlicePitch = 0;
+
+			CD3D11_BUFFER_DESC vertexBufferDesc_sky(sizeof(VertexPositionUVNORMAL) * skyVertices.size(), D3D11_BIND_VERTEX_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&vertexBufferDesc_sky,
+					&vertexBufferData_sky,
+					&m_vertexBuffer_sky
+				)
+			);
+
+			D3D11_SUBRESOURCE_DATA indexBufferData_sky = { 0 };
+			indexBufferData_sky.pSysMem = skyIndices.data();
+			indexBufferData_sky.SysMemPitch = 0;
+			indexBufferData_sky.SysMemSlicePitch = 0;
+
+			CD3D11_BUFFER_DESC indexBufferDesc_sky(sizeof(unsigned int) * skyIndices.size(), D3D11_BIND_INDEX_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&indexBufferDesc_sky,
+					&indexBufferData_sky,
+					&m_indexBuffer_sky
+				)
+			);
+		}
+
+		HRESULT result7 = CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(),
+			L"Assets\\Skybox1.dds",
+			((ComPtr<ID3D11Resource>)skyTexture).GetAddressOf(),
+			skyView.GetAddressOf());
+
+///////////////////////////////////End of Skybox////////////////////////////////////
+
 
 //////////////////////////////////////////Start of Alien//////////////////////////////////////////////
 
@@ -2025,6 +2232,17 @@ void Sample3DSceneRenderer::ReleaseDeviceDependentResources()
 	m_DirBuffer_drone.Reset();
 	m_PointBuffer_drone.Reset();
 	m_SpotBuffer_drone.Reset();
+
+	//Reset Skybox
+	m_vertexBuffer_sky.Reset();
+	m_indexBuffer_sky.Reset();
+	m_constantBuffer_sky.Reset();
+	skyTexture.Reset();
+	skyView.Reset();
+
+	m_DirBuffer_sky.Reset();
+	m_PointBuffer_sky.Reset();
+	m_SpotBuffer_sky.Reset();
 	///
 }
 
@@ -2108,6 +2326,116 @@ bool Sample3DSceneRenderer::LoadOBJModel(const char* path, std::vector <VertexPo
 				normalIndices.push_back(normalIndex[0]);
 				normalIndices.push_back(normalIndex[1]);
 				normalIndices.push_back(normalIndex[2]);
+
+
+			}
+		}
+
+	}
+
+	//filling in input-parameters
+	for (unsigned int i = 0; i < vertexIndices.size(); i++)
+	{
+		unsigned int vertexIndex = vertexIndices[i];
+		unsigned int uvIndex = uvIndices[i];
+		unsigned int normalIndex = normalIndices[i];
+		XMFLOAT3 vertex = temp_vertices[vertexIndex - 1];
+		XMFLOAT2 uv = temp_uvs[uvIndex - 1];
+		XMFLOAT3 normal = temp_normals[normalIndex - 1];
+
+		VertexPositionUVNORMAL temp;
+		temp.pos = vertex;
+		temp.uv = uv;
+		temp.normal = normal;
+		out_verts.push_back(temp);
+		out_indices.push_back(i);
+	}
+
+	fclose(file);
+	return true;
+
+}
+
+bool Sample3DSceneRenderer::LoadSkyBox(const char* path, std::vector <VertexPositionUVNORMAL> &out_verts, std::vector <unsigned int> &out_indices)
+{
+	//Temp variables to store obj data
+	std::vector<unsigned int> vertexIndices, uvIndices, normalIndices;
+	std::vector<XMFLOAT3> temp_vertices;
+	std::vector<XMFLOAT2> temp_uvs;
+	std::vector<XMFLOAT3> temp_normals;
+
+	char* curPath;
+	curPath = _getcwd(NULL, 0);
+
+
+	//Try to open the file
+	FILE* file = fopen(path, "r");
+
+	if (file == NULL)
+	{
+		printf("Can not open the file. \n");
+		return false;
+	}
+
+	//Read the file
+	while (true)
+	{
+		char lineHeader[128];
+		int res = fscanf_s(file, "%s", lineHeader, 128);
+		if (res == EOF)
+		{
+			//End of the file exit the loop
+			break;
+		}
+		else
+		{
+			if (strcmp(lineHeader, "v") == 0)
+			{
+				XMFLOAT3 vertex;
+				fscanf_s(file, "%f %f %f\n", &vertex.x, &vertex.y, &vertex.z);
+				//vertex.x = -vertex.x;
+				temp_vertices.push_back(vertex);
+			}
+			else if (strcmp(lineHeader, "vt") == 0)
+			{
+				XMFLOAT2 uv;
+				fscanf_s(file, "%f %f\n", &uv.x, &uv.y);
+				uv.y = 1.0f - uv.y;
+				temp_uvs.push_back(uv);
+			}
+			else if (strcmp(lineHeader, "vn") == 0)
+			{
+				XMFLOAT3 normal;
+				fscanf_s(file, "%f %f %f\n", &normal.x, &normal.y, &normal.z);
+				//normal.x = -normal.x;
+				temp_normals.push_back(normal);
+			}
+			else if (strcmp(lineHeader, "f") == 0)
+			{
+				std::string vertex1, vertex2, vertex3;
+				unsigned int vertexIndex[3], uvIndex[3], normalIndex[3];
+				int matches = fscanf_s(file, "%d/%d/%d %d/%d/%d %d/%d/%d\n", &vertexIndex[0],
+					&uvIndex[0], &normalIndex[0], &vertexIndex[1], &uvIndex[1], &normalIndex[1],
+					&vertexIndex[2], &uvIndex[2], &normalIndex[2]);
+
+				if (matches != 9)
+				{
+					printf("File can't be read by parser");
+					return false;
+				}
+
+				//push-back all found data
+				vertexIndices.push_back(vertexIndex[0]);
+				vertexIndices.push_back(vertexIndex[2]);
+				vertexIndices.push_back(vertexIndex[1]);
+
+				uvIndices.push_back(uvIndex[0]);
+				uvIndices.push_back(uvIndex[2]);
+				uvIndices.push_back(uvIndex[1]);
+
+				normalIndices.push_back(normalIndex[0]);
+				normalIndices.push_back(normalIndex[2]);
+				normalIndices.push_back(normalIndex[1]);
 
 
 			}

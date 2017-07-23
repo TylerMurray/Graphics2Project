@@ -127,6 +127,12 @@
     <None Include="Assets\Skybox.dds">
       <Filter>Assets\Textures</Filter>
     </None>
+    <None Include="Assets\Skybox.obj">
+      <Filter>Assets\Models</Filter>
+    </None>
+    <None Include="Assets\Skybox1.dds">
+      <Filter>Assets\Textures</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Content\VertexShaderPosUVNormal.hlsl">
