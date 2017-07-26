@@ -110,6 +110,9 @@ namespace App7
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_wall;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer_wall;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer_wall;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>        m_constantInstanceBuffer_wall;
+		Instancing m_instancing_wall;
+		Microsoft::WRL::ComPtr<ID3D11VertexShader>	m_vertexShader_wall;
 		ModelViewProjectionConstantBuffer m_constantBufferData_wall;
 		uint32 m_indexCount_wall;
 
@@ -160,13 +163,15 @@ namespace App7
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_floor;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer_floor;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer_floor;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>        m_constantInstanceBuffer_floor;
 		ModelViewProjectionConstantBuffer m_constantBufferData_floor;
 		uint32 m_indexCount_floor;
+		Instancing m_instancing_floor;
+		Microsoft::WRL::ComPtr<ID3D11VertexShader>	m_vertexShader_floor;
+
 
 		Microsoft::WRL::ComPtr<ID3D11Texture2D> floorTexture;
 		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> floorView;
-
-		//Lighting Floor
 		dir_light m_dirLight_floor;
 		point_light m_pointLight_floor;
 		spot_light m_spotLight_floor;
@@ -211,6 +216,25 @@ namespace App7
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_DirBuffer_sky;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_PointBuffer_sky;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_SpotBuffer_sky;
+
+		//Station
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_station;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer_station;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer_station;
+		ModelViewProjectionConstantBuffer m_constantBufferData_station;
+		uint32 m_indexCount_station;
+
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> stationTexture;
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> stationView;
+		dir_light m_dirLight_station;
+		point_light m_pointLight_station;
+		spot_light m_spotLight_station;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_DirBuffer_station;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_PointBuffer_station;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_SpotBuffer_station;
+
+
+
 		///
 	};
 }

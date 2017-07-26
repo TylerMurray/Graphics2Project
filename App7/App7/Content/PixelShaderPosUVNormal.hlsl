@@ -104,11 +104,16 @@ if (spot_position.w >= 1.0f)
 	float LightRatio2;
 	float4 LightColor2 = spot_color;
 
-	LightDir2 = normalize(LightPos2 - SurfacePos2);
+	float3 ToLight = LightPos2 - SurfacePos2;
+	float ToLightDis = length(ToLight);
+	LightDir2 = ToLight / ToLightDis;
+	float DisAtt = 1.0f - saturate(ToLightDis / 2.0f);
+	DisAtt *= DisAtt;
+	//LightDir2 = normalize(LightPos2 - SurfacePos2);
 	SurfaceRatio2 = clamp(dot(-normalize(LightDir2), normalize(ConeDir)), 0, 1);
 	SpotFactor2 = (SurfaceRatio2 > ConeRatio) ? 1 : 0;
 	LightRatio2 = clamp(dot(normalize(LightDir2), normalize(SurfaceNormal2)), 0, 1);
-	spotResult = SpotFactor2 * LightRatio2 * LightColor2 * SurfaceColor2;
+	spotResult = SpotFactor2 * LightRatio2 * LightColor2 * SurfaceColor2 * DisAtt;
 	//return spotResult;
 }
 

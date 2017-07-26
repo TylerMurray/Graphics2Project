@@ -133,12 +133,21 @@
     <None Include="Assets\Skybox1.dds">
       <Filter>Assets\Textures</Filter>
     </None>
+    <None Include="Assets\Station.obj">
+      <Filter>Assets\Models</Filter>
+    </None>
+    <None Include="Assets\station.dds">
+      <Filter>Assets\Textures</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Content\VertexShaderPosUVNormal.hlsl">
       <Filter>Content</Filter>
     </FxCompile>
     <FxCompile Include="Content\PixelShaderPosUVNormal.hlsl">
+      <Filter>Content</Filter>
+    </FxCompile>
+    <FxCompile Include="VertexInstancingShader.hlsl">
       <Filter>Content</Filter>
     </FxCompile>
   </ItemGroup>

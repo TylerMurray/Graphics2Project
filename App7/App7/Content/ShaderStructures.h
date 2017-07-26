@@ -49,4 +49,9 @@ namespace App7
 		DirectX::XMFLOAT4 spot_color;
 
 	};
+
+	struct Instancing
+	{
+		DirectX::XMFLOAT4X4 world[10];
+	};
 }
