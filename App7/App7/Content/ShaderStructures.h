@@ -52,6 +52,6 @@ namespace App7
 
 	struct Instancing
 	{
-		DirectX::XMFLOAT4X4 world[10];
+		DirectX::XMFLOAT4X4 world[64];
 	};
 }
