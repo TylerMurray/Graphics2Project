@@ -35,6 +35,7 @@ namespace App7
 		bool LoadSkyBox(const char * path, std::vector<VertexPositionUVNORMAL>& out_verts, std::vector<unsigned int>& out_indices);
 
 
+
 		///
 
 
@@ -68,7 +69,19 @@ namespace App7
 		///
 
 		///
-		// Direct3D resources for Pyramid geometry.
+
+		float SpotLightConeRatio = 0.0f;
+		float lightTime = 0.0f;
+		bool LightON = true;
+
+		////Render2Texture (TODO: Release memory by using reset)
+		//Microsoft::WRL::ComPtr<ID3D11Texture2D> Render2Texture;
+		//Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Render2TextureSRV;
+		//Microsoft::WRL::ComPtr<ID3D11RenderTargetView> Render2TextureRTV;
+
+
+
+		//Pyramid
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_Pyramid;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer_Pyramid;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer_Pyramid;
@@ -89,9 +102,6 @@ namespace App7
 
 		ModelViewProjectionConstantBuffer m_constantBufferData_objModel;
 		uint32 m_indexCount_objModel;
-		float dirY_vend = -1.0f;
-		float dirX_vend = 0.0f;
-		bool flip_vend = false;
 	
 		//Texture Variables VendingMachine
 		Microsoft::WRL::ComPtr<ID3D11Texture2D> diffuseTexture; //Color data mapped across polygons

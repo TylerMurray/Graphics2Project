@@ -139,6 +139,9 @@
     <None Include="Assets\station.dds">
       <Filter>Assets\Textures</Filter>
     </None>
+    <None Include="Assets\floor001.obj">
+      <Filter>Assets\Models</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Content\VertexShaderPosUVNormal.hlsl">

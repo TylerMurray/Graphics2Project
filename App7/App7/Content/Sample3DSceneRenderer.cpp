@@ -165,214 +165,207 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 	//3.14159 = 180 degrees
 	//1.5708 = 90 degrees
 	
-	////Pyramid////
-	m_constantBufferData_Pyramid = m_constantBufferData;
-	XMStoreFloat4x4(&m_constantBufferData_Pyramid.model, XMMatrixTranspose(XMMatrixTranslation(0.0f, -2.0f, 0.0f)*XMMatrixRotationX(3.14159f))); 
-	
-	////wall////																																			 
-	m_constantBufferData_wall = m_constantBufferData;
-	XMStoreFloat4x4(&m_constantBufferData_wall.model, XMMatrixTranspose(XMMatrixTranslation(-2.75f, 0.0f, 0.0f)*XMMatrixRotationY(3.14159f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
-	XMStoreFloat4(&m_dirLight_wall.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 0.1f });
-	XMStoreFloat4(&m_dirLight_wall.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
-
-	XMStoreFloat4(&m_pointLight_wall.point_position, XMVECTOR{ 2.0f, 1.0f + dirY_floor, -1.0f, 0.0f });
-	XMStoreFloat4(&m_pointLight_wall.point_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
-
-	XMStoreFloat4(&m_spotLight_wall.spot_position, XMVECTOR{ XMVectorGetX(camPos), XMVectorGetY(camPos)-0.5f, XMVectorGetZ(camPos), 1.0f });
-	XMStoreFloat4(&m_spotLight_wall.spot_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
-	XMStoreFloat4(&m_spotLight_wall.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
-	XMStoreFloat4(&m_spotLight_wall.spot_coneRatio, XMVECTOR{ 0.97f, 0.0f, 0.0f, 0.0f });
-
-	//Instancing
-	XMStoreFloat4x4(&m_instancing_wall.world[0], XMMatrixTranspose(XMMatrixTranslation(-2.75f, 0.0f, 0.0f)*XMMatrixRotationY(3.14159f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
-	XMStoreFloat4x4(&m_instancing_wall.world[8], XMMatrixTranspose(XMMatrixTranslation(-1.0f, 0.0f, 1.75f)*XMMatrixRotationY(1.5708f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
-	XMStoreFloat4x4(&m_instancing_wall.world[9], XMMatrixTranspose(XMMatrixTranslation(-1.0f, 0.0f, 0.75f)*XMMatrixRotationY(1.5708f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
-
-	XMStoreFloat4x4(&m_instancing_wall.world[10], XMMatrixTranspose(XMMatrixTranslation(-2.5f, 0.0f, -0.75f)*XMMatrixRotationY(-1.5708f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
-	XMStoreFloat4x4(&m_instancing_wall.world[11], XMMatrixTranspose(XMMatrixTranslation(-2.5f, 0.0f, -1.75f)*XMMatrixRotationY(-1.5708f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
-
-
-
-	for (unsigned int i = 1; i < 4; i++)
+	//SpotLight
+	lightTime += timer.GetElapsedSeconds();
+	//LightON = !LightON;
+	if (LightON == true)
 	{
-		//Move -Z [1,2,3] (left wall -when looking at alien)
-		XMStoreFloat4x4(&m_instancing_wall.world[i], XMMatrixTranspose(XMMatrixTranslation(-2.75f, 0.0f, 1.0f*i)*XMMatrixRotationY(3.14159f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
-	}
-	for (unsigned int i = 0; i < 4; i++)
-	{
-		//Move X once & Move -Z [4,5,6,7] (right wall -when looking at alien)
-		XMStoreFloat4x4(&m_instancing_wall.world[i + 4], XMMatrixTranspose(XMMatrixTranslation(-0.25f, 0.0f, -1.0f*i)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
-	}
-	
-	XMStoreFloat4(&m_spotLight_wall.spot_position, XMVECTOR{ XMVectorGetX(camPos), XMVectorGetY(camPos), XMVectorGetZ(camPos), 1.0f });
-	XMStoreFloat4(&m_spotLight_wall.spot_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
-	XMStoreFloat4(&m_spotLight_wall.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
-	XMStoreFloat4(&m_spotLight_wall.spot_coneRatio, XMVECTOR{ 0.5f, 0.0f, 0.0f, 0.0f });
-
-	////VendingMachine////
-	m_constantBufferData_objModel = m_constantBufferData;
-	XMStoreFloat4x4(&m_constantBufferData_objModel.model, XMMatrixTranspose(XMMatrixTranslation(-3.0f, -15.0f, -41.0f) * XMMatrixScaling(0.25f,0.25f,0.25f)*XMMatrixRotationY(-1.5708f)));
-	if (flip_vend == false)
-	{
-		dirY_vend += timer.GetElapsedSeconds() * 0.3f;
-		dirX_vend += timer.GetElapsedSeconds() * 0.3f;
+		SpotLightConeRatio = 0.75f;
 	}
 	else
 	{
-		dirY_vend -= timer.GetElapsedSeconds() * 0.3f;
-		dirX_vend -= timer.GetElapsedSeconds() * 0.3f;
+		SpotLightConeRatio = 1.0f;
 	}
-
-	if (dirY_vend > 0.0f)
+	if (lightTime < 4.0f)
 	{
-		//dirY_floor = -1.0f;
-		flip_vend = true;
-	}
-	if (dirX_vend > 1.0f)
-	{
-		//dirX_floor = 0.0f;
-		flip_vend = true;
-	}
-	if (dirY_vend < -1.0f)
-	{
-		//dirY_floor = -1.0f;
-		flip_vend = false;
-	}
-	if (dirX_vend < 0.0f)
-	{
-		//dirX_floor = 0.0f;
-		flip_vend = false;
-	}
-	XMStoreFloat4(&m_dirLight_objModel.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 1.1f });
-	XMStoreFloat4(&m_dirLight_objModel.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
-
-	XMStoreFloat4(&m_pointLight_objModel.point_position, XMVECTOR{ 9.0f + (dirX_floor*2), 0.75f, -0.25f, 1.0f });
-	XMStoreFloat4(&m_pointLight_objModel.point_color, XMVECTOR{ 1.0f, 1.0f, 0.0f, 1.0f });
-
-	XMStoreFloat4(&m_spotLight_objModel.spot_position, XMVECTOR{ 0.0f, 0.0f, 0.0f, 0.0f });
-	XMStoreFloat4(&m_spotLight_objModel.spot_color, XMVECTOR{ 1.0f, 0.0f, 1.0f, 1.0f });
-	XMStoreFloat4(&m_spotLight_objModel.spot_coneDir, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 0.0f });
-	XMStoreFloat4(&m_spotLight_objModel.spot_coneRatio, XMVECTOR{ 0.5f, 0.0f, 0.0f, 0.0f });
-
-	////Alien////
-	m_constantBufferData_alien = m_constantBufferData;
-	XMStoreFloat4x4(&m_constantBufferData_alien.model, XMMatrixTranspose(XMMatrixTranslation(-8.5f, -4.0f, 1.0f)*XMMatrixRotationY(3.14159f)* XMMatrixScaling(0.9f, 0.9f, 0.9f)));
-	XMStoreFloat4(&m_dirLight_alien.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 0.0f });
-	XMStoreFloat4(&m_dirLight_alien.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
-
-	XMStoreFloat4(&m_pointLight_alien.point_position, XMVECTOR{ 9.0f, 0.75f, -0.25f, 0.1f });
-	XMStoreFloat4(&m_pointLight_alien.point_color, XMVECTOR{ 1.0f, 1.0f, 0.0f, 1.0f });
-
-	XMStoreFloat4(&m_spotLight_alien.spot_position, XMVECTOR{ XMVectorGetX(camPos), XMVectorGetY(camPos)-0.5f, XMVectorGetZ(camPos), 0.0f });
-	XMStoreFloat4(&m_spotLight_alien.spot_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
-	XMStoreFloat4(&m_spotLight_alien.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
-	XMStoreFloat4(&m_spotLight_alien.spot_coneRatio, XMVECTOR{ 0.5f, 0.0f, 0.0f, 0.0f });
-	///
-
-	////Barrel////
-	m_constantBufferData_barrel = m_constantBufferData;
-	XMStoreFloat4x4(&m_constantBufferData_barrel.model, XMMatrixTranspose(XMMatrixTranslation(13.5f, -4.75f, 2.0f)* XMMatrixScaling(0.75f, 0.75f, 0.75f)));
-	XMStoreFloat4(&m_dirLight_barrel.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 1.1f });
-	XMStoreFloat4(&m_dirLight_barrel.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
-
-	XMStoreFloat4(&m_spotLight_barrel.spot_position, XMVECTOR{ XMVectorGetX(camPos), XMVectorGetY(camPos)-0.5f, XMVectorGetZ(camPos), 1.0f });
-	XMStoreFloat4(&m_spotLight_barrel.spot_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
-	XMStoreFloat4(&m_spotLight_barrel.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
-	XMStoreFloat4(&m_spotLight_barrel.spot_coneRatio, XMVECTOR{ 0.5f, 0.0f, 0.0f, 0.0f });
-
-	////floor////
-	m_constantBufferData_floor = m_constantBufferData;
-	XMStoreFloat4x4(&m_constantBufferData_floor.model, XMMatrixTranspose(XMMatrixTranslation(1.75f, -1.2f, 0.0f)* XMMatrixScaling(5.0f, 5.0f, 5.0f)));
-	if (flip_floor == false)
-	{
-		dirY_floor += timer.GetElapsedSeconds() * 0.15f;
-		dirX_floor += timer.GetElapsedSeconds() * 0.15f;
+		LightON = true;
 	}
 	else
 	{
-		dirY_floor -= timer.GetElapsedSeconds() * 0.15f;
-		dirX_floor -= timer.GetElapsedSeconds() * 0.15f;
+		LightON = !LightON;
+		if (lightTime > 5.0f)
+		{
+			lightTime = 0.0f;
+		}
 	}
 
-	if (dirY_floor > 0.0f)
-	{
-		flip_floor = true;
-	}
-	if (dirX_floor > 1.0f)
-	{
-		flip_floor = true;
-	}
-	if (dirY_floor < -1.0f)
-	{
-		flip_floor = false;
-	}
-	if (dirX_floor < 0.0f)
-	{
-		flip_floor = false;
-	}
-	XMStoreFloat4(&m_dirLight_floor.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 0.1f });
-	XMStoreFloat4(&m_dirLight_floor.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+		////Pyramid////	
+		m_constantBufferData_Pyramid = m_constantBufferData;
+		XMStoreFloat4x4(&m_constantBufferData_Pyramid.model, XMMatrixTranspose(XMMatrixTranslation(0.0f, -2.0f, 0.0f)*XMMatrixRotationX(3.14159f)));
 
-	XMStoreFloat4(&m_pointLight_floor.point_position, XMVECTOR{ 3.0f, -3.0f + dirY_floor, -1.0f, 1.0f });
-	XMStoreFloat4(&m_pointLight_floor.point_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f }); 
+		////wall////																																			 
+		m_constantBufferData_wall = m_constantBufferData;
+		XMStoreFloat4x4(&m_constantBufferData_wall.model, XMMatrixTranspose(XMMatrixTranslation(-2.75f, 0.0f, 0.0f)*XMMatrixRotationY(3.14159f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
+		XMStoreFloat4(&m_dirLight_wall.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 0.1f });
+		XMStoreFloat4(&m_dirLight_wall.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
 
-	XMStoreFloat4(&m_spotLight_floor.spot_position, XMVECTOR{ XMVectorGetX(camPos), XMVectorGetY(camPos)-0.5f, XMVectorGetZ(camPos), 1.0f });
-	XMStoreFloat4(&m_spotLight_floor.spot_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
-	XMStoreFloat4(&m_spotLight_floor.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
-	XMStoreFloat4(&m_spotLight_floor.spot_coneRatio, XMVECTOR{ 0.97f, 0.0f, 0.0f, 0.0f });
+		XMStoreFloat4(&m_pointLight_wall.point_position, XMVECTOR{ 2.0f, 1.0f + dirY_floor, -1.0f, 0.0f });
+		XMStoreFloat4(&m_pointLight_wall.point_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
 
-	//Instancing
-	XMStoreFloat4x4(&m_instancing_floor.world[0], XMMatrixTranspose(XMMatrixTranslation(1.75f, -1.2f, 0.0f)* XMMatrixScaling(5.0f, 5.0f, 5.0f)));
+		XMStoreFloat4(&m_spotLight_wall.spot_position, XMVECTOR{ XMVectorGetX(camPos), XMVectorGetY(camPos) - 0.5f, XMVectorGetZ(camPos), 1.0f });
+		XMStoreFloat4(&m_spotLight_wall.spot_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+		XMStoreFloat4(&m_spotLight_wall.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
+		XMStoreFloat4(&m_spotLight_wall.spot_coneRatio, XMVECTOR{ SpotLightConeRatio, 0.0f, 0.0f, 0.0f });
 
-	for (unsigned int i = 1; i < 4; i++)
-	{
-		//Move -Z (floor) [1,2,3]
-		XMStoreFloat4x4(&m_instancing_floor.world[i], XMMatrixTranspose(XMMatrixTranslation(1.75f, -1.2f, -1.0f*i)* XMMatrixScaling(5.0f, 5.0f, 5.0f)));
-	}
-	for (unsigned int i = 0; i < 4; i++)
-	{
-		//Move X once & Move -Z (floor) [4,5,6,7]
-		XMStoreFloat4x4(&m_instancing_floor.world[i+4], XMMatrixTranspose(XMMatrixTranslation(0.75f, -1.2f, -1.0f*i)* XMMatrixScaling(5.0f, 5.0f, 5.0f)));
+		//Instancing
+		XMStoreFloat4x4(&m_instancing_wall.world[0], XMMatrixTranspose(XMMatrixTranslation(-2.75f, 0.0f, 0.0f)*XMMatrixRotationY(3.14159f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
+		XMStoreFloat4x4(&m_instancing_wall.world[8], XMMatrixTranspose(XMMatrixTranslation(-1.0f, 0.0f, 1.75f)*XMMatrixRotationY(1.5708f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
+		XMStoreFloat4x4(&m_instancing_wall.world[9], XMMatrixTranspose(XMMatrixTranslation(-1.0f, 0.0f, 0.75f)*XMMatrixRotationY(1.5708f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
 
-	}
-	for (unsigned int i = 0; i < 4; i++)
-	{
-		//Ceiling 1 [8,9,10,11]
-		XMStoreFloat4x4(&m_instancing_floor.world[i+8], XMMatrixTranspose(XMMatrixTranslation(1.75f, -1.2f, -0.1f + i)* XMMatrixScaling(5.0f, 5.0f, 5.0f) * XMMatrixRotationX(3.14159f)));
-	}
-	for (unsigned int i = 0; i < 4; i++)
-	{
-		//Ceiling 2 [12,13,14,15]
-		XMStoreFloat4x4(&m_instancing_floor.world[i+12], XMMatrixTranspose(XMMatrixTranslation(0.75f, -1.2f, -0.1f + i)* XMMatrixScaling(5.0f, 5.0f, 5.0f) * XMMatrixRotationX(3.14159f)));
-	}
-	
+		XMStoreFloat4x4(&m_instancing_wall.world[10], XMMatrixTranspose(XMMatrixTranslation(-2.5f, 0.0f, -0.75f)*XMMatrixRotationY(-1.5708f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
+		XMStoreFloat4x4(&m_instancing_wall.world[11], XMMatrixTranspose(XMMatrixTranslation(-2.5f, 0.0f, -1.75f)*XMMatrixRotationY(-1.5708f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
 
-	////Drone////
-	m_constantBufferData_drone = m_constantBufferData;
-	XMStoreFloat4x4(&m_constantBufferData_drone.model, XMMatrixTranspose(XMMatrixScaling(0.005f, 0.005f, 0.005f)*newcamera*XMMatrixTranslation(0.0f, -0.5f, 0.0f)));
+		//XMStoreFloat4x4(&m_instancing_wall.world[12], XMMatrixTranspose(XMMatrixTranslation(-0.9f, -1.0f, 0.0f)*XMMatrixRotationZ(1.5708f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
 
-	XMStoreFloat4(&m_dirLight_drone.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 0.0f });
-	XMStoreFloat4(&m_dirLight_drone.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
 
-	XMStoreFloat4(&m_pointLight_drone.point_position, XMVECTOR{ 3.0f, -3.0f + dirY_floor, -1.0f, 0.0f });
-	XMStoreFloat4(&m_pointLight_drone.point_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
 
-	XMStoreFloat4(&m_spotLight_drone.spot_position, XMVECTOR{ XMVectorGetX(camPos), XMVectorGetY(camPos) - 0.5f, XMVectorGetZ(camPos), 0.0f });
-	XMStoreFloat4(&m_spotLight_drone.spot_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
-	XMStoreFloat4(&m_spotLight_drone.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
-	XMStoreFloat4(&m_spotLight_drone.spot_coneRatio, XMVECTOR{ 0.97f, 0.0f, 0.0f, 0.0f });
+		for (unsigned int i = 1; i < 4; i++)
+		{
+			//Move -Z [1,2,3] (left wall -when looking at alien)
+			XMStoreFloat4x4(&m_instancing_wall.world[i], XMMatrixTranspose(XMMatrixTranslation(-2.75f, 0.0f, 1.0f*i)*XMMatrixRotationY(3.14159f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
+		}
+		for (unsigned int i = 0; i < 4; i++)
+		{
+			//Move X once & Move -Z [4,5,6,7] (right wall -when looking at alien)
+			XMStoreFloat4x4(&m_instancing_wall.world[i + 4], XMMatrixTranspose(XMMatrixTranslation(-0.25f, 0.0f, -1.0f*i)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
+		}
 
-	////Skybox////
-	m_constantBufferData_sky = m_constantBufferData;
-	XMStoreFloat4x4(&m_constantBufferData_sky.model, XMMatrixTranspose(XMMatrixScaling(100.0f, 100.0f, 100.0f)*XMMatrixTranslation(XMVectorGetX(camPos), XMVectorGetY(camPos), XMVectorGetZ(camPos))));
-	XMStoreFloat4(&m_dirLight_drone.dir_direction, XMVECTOR{ 0.0f, 0.0f, 0.0f, 0.0f });
-	XMStoreFloat4(&m_dirLight_drone.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
 
-	////Station////
-	m_constantBufferData_station = m_constantBufferData;
-	XMStoreFloat4x4(&m_constantBufferData_station.model, XMMatrixTranspose(XMMatrixScaling(100.0f, 100.0f, 100.0f)*XMMatrixTranslation(7.0f, 8.0f, -10.0f)));
-	XMStoreFloat4(&m_dirLight_station.dir_direction, XMVECTOR{ 0.0f, 0.0f, 0.0f, 0.0f });
-	XMStoreFloat4(&m_dirLight_station.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+		////VendingMachine////
+		m_constantBufferData_objModel = m_constantBufferData;
+		XMStoreFloat4x4(&m_constantBufferData_objModel.model, XMMatrixTranspose(XMMatrixTranslation(-3.0f, -15.0f, -41.0f) * XMMatrixScaling(0.25f, 0.25f, 0.25f)*XMMatrixRotationY(-1.5708f)));
+
+		XMStoreFloat4(&m_dirLight_objModel.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 1.1f });
+		XMStoreFloat4(&m_dirLight_objModel.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+
+		XMStoreFloat4(&m_pointLight_objModel.point_position, XMVECTOR{ 9.0f + (dirX_floor * 2), 0.75f, -0.25f, 1.0f });
+		XMStoreFloat4(&m_pointLight_objModel.point_color, XMVECTOR{ 1.0f, 1.0f, 0.0f, 1.0f });
+
+		XMStoreFloat4(&m_spotLight_objModel.spot_position, XMVECTOR{ XMVectorGetX(camPos), XMVectorGetY(camPos) - 0.5f, XMVectorGetZ(camPos), 1.0f });
+		XMStoreFloat4(&m_spotLight_objModel.spot_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+		XMStoreFloat4(&m_spotLight_objModel.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
+		XMStoreFloat4(&m_spotLight_objModel.spot_coneRatio, XMVECTOR{ SpotLightConeRatio, 0.0f, 0.0f, 0.0f });
+
+		////Alien////
+		m_constantBufferData_alien = m_constantBufferData;
+		XMStoreFloat4x4(&m_constantBufferData_alien.model, XMMatrixTranspose(XMMatrixTranslation(-8.5f, -4.0f, 1.0f)*XMMatrixRotationY(3.14159f)* XMMatrixScaling(0.9f, 0.9f, 0.9f)));
+		XMStoreFloat4(&m_dirLight_alien.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 0.1f });
+		XMStoreFloat4(&m_dirLight_alien.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+
+		XMStoreFloat4(&m_pointLight_alien.point_position, XMVECTOR{ 9.0f, 0.75f, -0.25f, 0.1f });
+		XMStoreFloat4(&m_pointLight_alien.point_color, XMVECTOR{ 1.0f, 1.0f, 0.0f, 1.0f });
+
+		XMStoreFloat4(&m_spotLight_alien.spot_position, XMVECTOR{ XMVectorGetX(camPos), XMVectorGetY(camPos) - 0.5f, XMVectorGetZ(camPos), 1.0f });
+		XMStoreFloat4(&m_spotLight_alien.spot_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+		XMStoreFloat4(&m_spotLight_alien.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
+		XMStoreFloat4(&m_spotLight_alien.spot_coneRatio, XMVECTOR{ SpotLightConeRatio, 0.0f, 0.0f, 0.0f });
+
+		////Barrel////
+		m_constantBufferData_barrel = m_constantBufferData;
+		XMStoreFloat4x4(&m_constantBufferData_barrel.model, XMMatrixTranspose(XMMatrixTranslation(13.5f, -4.75f, 2.0f)* XMMatrixScaling(0.75f, 0.75f, 0.75f)));
+		XMStoreFloat4(&m_dirLight_barrel.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 1.1f });
+		XMStoreFloat4(&m_dirLight_barrel.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+
+		XMStoreFloat4(&m_spotLight_barrel.spot_position, XMVECTOR{ XMVectorGetX(camPos), XMVectorGetY(camPos) - 0.5f, XMVectorGetZ(camPos), 1.0f });
+		XMStoreFloat4(&m_spotLight_barrel.spot_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+		XMStoreFloat4(&m_spotLight_barrel.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
+		XMStoreFloat4(&m_spotLight_barrel.spot_coneRatio, XMVECTOR{ SpotLightConeRatio, 0.0f, 0.0f, 0.0f });
+
+		////floor////
+		m_constantBufferData_floor = m_constantBufferData;
+		XMStoreFloat4x4(&m_constantBufferData_floor.model, XMMatrixTranspose(XMMatrixTranslation(1.75f, -1.2f, 0.0f)* XMMatrixScaling(5.0f, 5.0f, 5.0f)));
+		if (flip_floor == false)
+		{
+			dirY_floor += timer.GetElapsedSeconds() * 0.15f;
+			dirX_floor += timer.GetElapsedSeconds() * 0.15f;
+
+		}
+		else
+		{
+			dirY_floor -= timer.GetElapsedSeconds() * 0.15f;
+			dirX_floor -= timer.GetElapsedSeconds() * 0.15f;
+
+		}
+
+		if (dirY_floor > 0.0f)
+		{
+			flip_floor = true;
+		}
+		if (dirX_floor > 1.0f)
+		{
+			flip_floor = true;
+		}
+		if (dirY_floor < -1.0f)
+		{
+			flip_floor = false;
+		}
+		if (dirX_floor < 0.0f)
+		{
+			flip_floor = false;
+		}
+		XMStoreFloat4(&m_dirLight_floor.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 0.1f });
+		XMStoreFloat4(&m_dirLight_floor.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+
+		XMStoreFloat4(&m_pointLight_floor.point_position, XMVECTOR{ 3.0f, -3.0f + dirY_floor, -1.0f, 1.0f });
+		XMStoreFloat4(&m_pointLight_floor.point_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+
+		XMStoreFloat4(&m_spotLight_floor.spot_position, XMVECTOR{ XMVectorGetX(camPos), XMVectorGetY(camPos) - 0.5f, XMVectorGetZ(camPos), 1.0f });
+		XMStoreFloat4(&m_spotLight_floor.spot_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+		XMStoreFloat4(&m_spotLight_floor.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
+		XMStoreFloat4(&m_spotLight_floor.spot_coneRatio, XMVECTOR{ SpotLightConeRatio, 0.0f, 0.0f, 0.0f });
+
+		//Instancing
+		XMStoreFloat4x4(&m_instancing_floor.world[0], XMMatrixTranspose(XMMatrixTranslation(1.75f, -1.2f, 0.0f)* XMMatrixScaling(5.0f, 5.0f, 5.0f)));
+
+		for (unsigned int i = 1; i < 4; i++)
+		{
+			//Move -Z (floor) [1,2,3]
+			XMStoreFloat4x4(&m_instancing_floor.world[i], XMMatrixTranspose(XMMatrixTranslation(1.75f, -1.2f, -1.0f*i)* XMMatrixScaling(5.0f, 5.0f, 5.0f)));
+		}
+		for (unsigned int i = 0; i < 4; i++)
+		{
+			//Move X once & Move -Z (floor) [4,5,6,7]
+			XMStoreFloat4x4(&m_instancing_floor.world[i + 4], XMMatrixTranspose(XMMatrixTranslation(0.75f, -1.2f, -1.0f*i)* XMMatrixScaling(5.0f, 5.0f, 5.0f)));
+
+		}
+		for (unsigned int i = 0; i < 4; i++)
+		{
+			//Ceiling 1 [8,9,10,11]
+			XMStoreFloat4x4(&m_instancing_floor.world[i + 8], XMMatrixTranspose(XMMatrixTranslation(1.75f, -1.2f, -0.1f + i)* XMMatrixScaling(5.0f, 5.0f, 5.0f) * XMMatrixRotationX(3.14159f)));
+		}
+		for (unsigned int i = 0; i < 4; i++)
+		{
+			//Ceiling 2 [12,13,14,15]
+			XMStoreFloat4x4(&m_instancing_floor.world[i + 12], XMMatrixTranspose(XMMatrixTranslation(0.75f, -1.2f, -0.1f + i)* XMMatrixScaling(5.0f, 5.0f, 5.0f) * XMMatrixRotationX(3.14159f)));
+		}
+
+
+		////Drone////
+		m_constantBufferData_drone = m_constantBufferData;
+		XMStoreFloat4x4(&m_constantBufferData_drone.model, XMMatrixTranspose(XMMatrixScaling(0.005f, 0.005f, 0.005f)*newcamera*XMMatrixTranslation(0.0f, -0.5f, 0.0f)));
+
+		XMStoreFloat4(&m_dirLight_drone.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 0.0f });
+		XMStoreFloat4(&m_dirLight_drone.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+
+		XMStoreFloat4(&m_pointLight_drone.point_position, XMVECTOR{ 3.0f, -3.0f + dirY_floor, -1.0f, 0.0f });
+		XMStoreFloat4(&m_pointLight_drone.point_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+
+		XMStoreFloat4(&m_spotLight_drone.spot_position, XMVECTOR{ XMVectorGetX(camPos), XMVectorGetY(camPos) - 0.5f, XMVectorGetZ(camPos), 0.0f });
+		XMStoreFloat4(&m_spotLight_drone.spot_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+		XMStoreFloat4(&m_spotLight_drone.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
+		XMStoreFloat4(&m_spotLight_drone.spot_coneRatio, XMVECTOR{ SpotLightConeRatio, 0.0f, 0.0f, 0.0f });
+
+		////Skybox////
+		m_constantBufferData_sky = m_constantBufferData;
+		XMStoreFloat4x4(&m_constantBufferData_sky.model, XMMatrixTranspose(XMMatrixScaling(100.0f, 100.0f, 100.0f)*XMMatrixTranslation(XMVectorGetX(camPos), XMVectorGetY(camPos), XMVectorGetZ(camPos))));
+		XMStoreFloat4(&m_dirLight_drone.dir_direction, XMVECTOR{ 0.0f, 0.0f, 0.0f, 0.0f });
+		XMStoreFloat4(&m_dirLight_drone.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+
+		////Station////
+		m_constantBufferData_station = m_constantBufferData;
+		XMStoreFloat4x4(&m_constantBufferData_station.model, XMMatrixTranspose(XMMatrixScaling(100.0f, 100.0f, 100.0f)*XMMatrixTranslation(7.0f, 8.0f, -10.0f)));
+		XMStoreFloat4(&m_dirLight_station.dir_direction, XMVECTOR{ 0.0f, 0.0f, 0.0f, 0.0f });
+		XMStoreFloat4(&m_dirLight_station.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
 
 }
 
@@ -648,9 +641,6 @@ void Sample3DSceneRenderer::Render()
 	);
 	//End of objModel vending Machine
 
-	
-
-
 	//Draw Barrel//
 	context->UpdateSubresource1(
 		m_constantBuffer_barrel.Get(),
@@ -770,15 +760,15 @@ void Sample3DSceneRenderer::Render()
 	///
 
 	//Draw wall//
-	context->UpdateSubresource1(
-		m_constantBuffer_wall.Get(),
-		0,
-		NULL,
-		&m_constantBufferData_wall,
-		0,
-		0,
-		0
-	);
+	//context->UpdateSubresource1(
+	//	m_constantBuffer_wall.Get(),
+	//	0,
+	//	NULL,
+	//	&m_constantBufferData_wall,
+	//	0,
+	//	0,
+	//	0
+	//);
 	//update dir_buffer
 	context->UpdateSubresource1(
 		m_DirBuffer_wall.Get(),
@@ -843,7 +833,7 @@ void Sample3DSceneRenderer::Render()
 	//	0
 	//); //Thats fine using same shader
 	context->VSSetShader(
-		m_vertexShader_floor.Get(),
+		m_vertexShader_wall.Get(),
 		nullptr,
 		0
 	); //Thats fine using same shader as floor for instancing
@@ -913,15 +903,15 @@ void Sample3DSceneRenderer::Render()
 	);
 
 	//Draw floor//
-	context->UpdateSubresource1(
-		m_constantBuffer_floor.Get(),
-		0,
-		NULL,
-		&m_constantBufferData_floor,
-		0,
-		0,
-		0
-	);
+	//context->UpdateSubresource1(
+	//	m_constantBuffer_floor.Get(),
+	//	0,
+	//	NULL,
+	//	&m_constantBufferData_floor,
+	//	0,
+	//	0,
+	//	0
+	//);
 
 	//update dir_buffer
 	context->UpdateSubresource1(
@@ -1535,7 +1525,10 @@ void Sample3DSceneRenderer::Render()
 		0,
 		0
 	);
+
 	///
+
+
 
 }
 
@@ -1985,6 +1978,21 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 
 		if (res4 == true)
 		{
+			// Load shaders asynchronously.
+			auto loadVSTask2 = DX::ReadDataAsync(L"VertexInstancingShader.cso");
+
+			// After the vertex shader file is loaded, create the shader and input layout.
+			auto createVSTask2 = loadVSTask2.then([this](const std::vector<byte>& fileData) {
+				DX::ThrowIfFailed(
+					m_deviceResources->GetD3DDevice()->CreateVertexShader(
+						&fileData[0],
+						fileData.size(),
+						nullptr,
+						&m_vertexShader_wall
+					)
+				);
+			});
+
 			CD3D11_BUFFER_DESC constantBufferDesc_wall(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
 			DX::ThrowIfFailed(
 				m_deviceResources->GetD3DDevice()->CreateBuffer(
@@ -2071,7 +2079,6 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 		bool res5 = LoadOBJModel("Assets/floor.obj", floorVertices, floorIndices);
 
 		m_indexCount_floor = floorIndices.size();
-		
 
 		if (res5 == true)
 		{
@@ -2508,7 +2515,27 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 
 		///////////////////////////////////End of Alien////////////////////////////////////
 
+		////Render2Texture;
+		//Size outputSize = m_deviceResources->GetOutputSize();
+		//D3D11_TEXTURE2D_DESC texDesc;
+		//texDesc.Width = outputSize.Width / 4;
+		//texDesc.Height = outputSize.Height / 3;
+		//texDesc.MipLevels = 1;
+		//texDesc.ArraySize = 0;
+		//texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+		//texDesc.Usage = D3D11_USAGE_DEFAULT;
+		//texDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+		//texDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
 
+		//D3D11_SUBRESOURCE_DATA SSD;
+		//SSD.pSysMem = 
+		//SSD.SysMemPitch = 1;
+		//SSD.SysMemSlicePitch = 2;
+
+
+		//m_deviceResources->GetD3DDevice()->CreateTexture2D(&texDesc, NULL, &Render2Texture);
+		////Render2TextureRTV;
+		////Render2TextureSRV;
 		
 
 	///
@@ -2855,4 +2882,6 @@ bool Sample3DSceneRenderer::LoadSkyBox(const char* path, std::vector <VertexPosi
 	return true;
 
 }
+
+
 

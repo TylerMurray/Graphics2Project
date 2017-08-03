@@ -53,12 +53,12 @@ if (dir_direction.w >= 1.0f)
 		//Directional Light	
 		float LightRatio;
 		float3 LightDir = float3(dir_direction.x, dir_direction.y, dir_direction.z);
-		float3 SurfaceNormal = input.normal;
+		float3 SurfaceNormal = normalize(input.normal);
 	
 		float4 SurfaceColor = objTexture.Sample(filter, input.uv);
 		float4 LightColor = dir_color;
 
-		LightRatio = clamp(dot(-normalize(LightDir), normalize(SurfaceNormal)), 0, 1);
+		LightRatio = clamp(dot(-normalize(LightDir), SurfaceNormal), 0, 1);
 		dirResult = LightRatio * LightColor * SurfaceColor;
 }
 if (point_position.w >= 1.0f)
@@ -68,7 +68,7 @@ if (point_position.w >= 1.0f)
 	float3 LightPos1 = float3(point_position.x, point_position.y, point_position.z);
 	float3 SurfacePos1 = input.worldpos;
 	float LightRatio1;
-	float3 SurfaceNormal1 = input.normal;
+	float3 SurfaceNormal1 = normalize(input.normal);
 	
 	float4 SurfaceColor1 = objTexture.Sample(filter, input.uv);
 	float4 LightColor1 = point_color;
@@ -83,7 +83,7 @@ if (point_position.w >= 1.0f)
 	float Attenuation = 1.0f - clamp(length(LightPos1 - SurfacePos1) / LightRadius, 0, 1);
 	Attenuation *= Attenuation;
 
-	LightRatio1 = clamp(dot(normalize(LightDir1), normalize(SurfaceNormal1)), 0, 1);
+	LightRatio1 = clamp(dot(LightDir1, SurfaceNormal1), 0, 1);
 	pointResult = LightRatio1 * LightColor1 * SurfaceColor1 * Attenuation;
 }
 
@@ -93,7 +93,7 @@ if (spot_position.w >= 1.0f)
 	float3 LightDir2;
 	float3 LightPos2 = float3(spot_position.x, spot_position.y, spot_position.z);
 	float3 SurfacePos2 = input.worldpos;
-	float3 SurfaceNormal2 = input.normal;
+	float3 SurfaceNormal2 = normalize(input.normal);
 	float4 SurfaceColor2 = objTexture.Sample(filter, input.uv);
 	float SurfaceRatio2;
 	float3 ConeDir = float3(spot_coneDir.x, spot_coneDir.y, spot_coneDir.z);
@@ -105,9 +105,9 @@ if (spot_position.w >= 1.0f)
 	float OuterConeRatio = 0.85f;
 
 	LightDir2 = normalize(LightPos2 - SurfacePos2);
-	SurfaceRatio2 = clamp(dot(-normalize(LightDir2), normalize(ConeDir)), 0, 1);
+	SurfaceRatio2 = clamp(dot(-LightDir2, normalize(ConeDir)), 0, 1);
 	SpotFactor2 = (SurfaceRatio2 > ConeRatio) ? 1 : 0;
-	LightRatio2 = clamp(dot(normalize(LightDir2), normalize(SurfaceNormal2)), 0, 1);
+	LightRatio2 = clamp(dot(LightDir2, SurfaceNormal2), 0, 1);
 
 	float Attenuation = 1.0f - clamp((InnerConeRatio - SurfaceRatio2) / (InnerConeRatio - OuterConeRatio), 0, 1);
 	Attenuation *= Attenuation;
