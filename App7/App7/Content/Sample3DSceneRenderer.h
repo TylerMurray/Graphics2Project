@@ -31,10 +31,13 @@ namespace App7
 		
 		///
 		bool LoadOBJModel(const char* path, std::vector <VertexPositionUVNORMAL> &out_verts, std::vector <unsigned int> &out_indices);
-
 		bool LoadSkyBox(const char * path, std::vector<VertexPositionUVNORMAL>& out_verts, std::vector<unsigned int>& out_indices);
 
+		void RenderToTexture();
 
+		void DrawSkybox();
+
+		void DrawStation();
 
 		///
 
@@ -68,18 +71,33 @@ namespace App7
 		XMFLOAT4X4 world, camera, proj;
 		///
 
-		///
-
 		float SpotLightConeRatio = 0.0f;
 		float lightTime = 0.0f;
 		bool LightON = true;
 
-		////Render2Texture (TODO: Release memory by using reset)
+		//Render2Texture 
+		//Texture
 		//Microsoft::WRL::ComPtr<ID3D11Texture2D> Render2Texture;
 		//Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Render2TextureSRV;
 		//Microsoft::WRL::ComPtr<ID3D11RenderTargetView> Render2TextureRTV;
+		//Microsoft::WRL::ComPtr<ID3D11DepthStencilView> Render2TextureDSV;
+		//D3D11_VIEWPORT Render2Texture_viewport;
 
+		//Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_R2T;
+		//Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer_R2T;
+		//Microsoft::WRL::ComPtr<ID3D11Buffer>		m_DepthBuffer_R2T;
+		////Object TV
+		//Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_tv;
+		//Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer_tv;
+		//Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer_tv;
+		//ModelViewProjectionConstantBuffer m_constantBufferData_tv;
+		//uint32 m_indexCount_tv;
 
+		//Microsoft::WRL::ComPtr<ID3D11Texture2D> tvTexture;
+		//Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> tvView;
+		//dir_light m_dirLight_tv;
+		//Microsoft::WRL::ComPtr<ID3D11Buffer>		m_DirBuffer_tv;
+		////End of Render 2 Texture
 
 		//Pyramid
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_Pyramid;
