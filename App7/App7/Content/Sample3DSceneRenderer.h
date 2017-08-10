@@ -39,6 +39,22 @@ namespace App7
 
 		void DrawStation();
 
+		void DrawPyramid();
+
+		void DrawVendingMachine();
+
+		void DrawBarrel();
+
+		void DrawWall();
+
+		void DrawFloor();
+
+		void DrawDrone();
+
+		void DrawAlien();
+
+		void DrawTv();
+
 		///
 
 
@@ -69,6 +85,7 @@ namespace App7
 
 		///
 		XMFLOAT4X4 world, camera, proj;
+		XMFLOAT4X4 world2, camera2, proj2;
 		///
 
 		float SpotLightConeRatio = 0.0f;
@@ -77,27 +94,25 @@ namespace App7
 
 		//Render2Texture 
 		//Texture
-		//Microsoft::WRL::ComPtr<ID3D11Texture2D> Render2Texture;
-		//Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Render2TextureSRV;
-		//Microsoft::WRL::ComPtr<ID3D11RenderTargetView> Render2TextureRTV;
-		//Microsoft::WRL::ComPtr<ID3D11DepthStencilView> Render2TextureDSV;
-		//D3D11_VIEWPORT Render2Texture_viewport;
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> Render2Texture_Screen;
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> Render2Texture_Depth;
 
-		//Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_R2T;
-		//Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer_R2T;
-		//Microsoft::WRL::ComPtr<ID3D11Buffer>		m_DepthBuffer_R2T;
-		////Object TV
-		//Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_tv;
-		//Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer_tv;
-		//Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer_tv;
-		//ModelViewProjectionConstantBuffer m_constantBufferData_tv;
-		//uint32 m_indexCount_tv;
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> Render2TextureSRV;
+		Microsoft::WRL::ComPtr<ID3D11RenderTargetView> Render2TextureRTV;
+		Microsoft::WRL::ComPtr<ID3D11DepthStencilView> Render2TextureDSV;
 
-		//Microsoft::WRL::ComPtr<ID3D11Texture2D> tvTexture;
-		//Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> tvView;
-		//dir_light m_dirLight_tv;
-		//Microsoft::WRL::ComPtr<ID3D11Buffer>		m_DirBuffer_tv;
-		////End of Render 2 Texture
+		//Object TV
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_tv;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer_tv;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer_tv;
+		ModelViewProjectionConstantBuffer m_constantBufferData_tv;
+		uint32 m_indexCount_tv;
+
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> tvTexture;
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> tvView;
+		dir_light m_dirLight_tv;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_DirBuffer_tv;
+		//End of Render 2 Texture
 
 		//Pyramid
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_Pyramid;

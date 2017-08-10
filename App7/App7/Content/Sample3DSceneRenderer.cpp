@@ -365,11 +365,10 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 		XMStoreFloat4(&m_dirLight_station.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
 
 		//TV//
-	/*	m_constantBufferData_tv = m_constantBufferData;
-		XMStoreFloat4x4(&m_constantBufferData_tv.model, XMMatrixTranspose(XMMatrixTranslation(0.075f, 1.0f, 0.0f)*XMMatrixScaling(2.5f,1.5f,2.5f)));
+		m_constantBufferData_tv = m_constantBufferData;
+		XMStoreFloat4x4(&m_constantBufferData_tv.model, XMMatrixTranspose(XMMatrixTranslation(0.075f, 1.0f, -5.0f)*XMMatrixScaling(2.5f,1.5f,2.5f)));
 		XMStoreFloat4(&m_dirLight_tv.dir_direction, XMVECTOR{ 0.0f, 0.0f, 0.0f, 0.0f });
-		XMStoreFloat4(&m_dirLight_tv.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });*/
-		//Texture//
+		XMStoreFloat4(&m_dirLight_tv.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
 
 }
 
@@ -409,7 +408,14 @@ void Sample3DSceneRenderer::Render()
 		return;
 	}
 
+	RenderToTexture();
+
 	auto context = m_deviceResources->GetD3DDeviceContext();
+
+	ID3D11RenderTargetView *const targets[1] = { m_deviceResources->GetBackBufferRenderTargetView() };
+	context->OMSetRenderTargets(1, targets, m_deviceResources->GetDepthStencilView());
+	context->ClearRenderTargetView(m_deviceResources->GetBackBufferRenderTargetView(), DirectX::Colors::CornflowerBlue);
+	context->ClearDepthStencilView(m_deviceResources->GetDepthStencilView(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 	// Prepare the constant buffer to send it to the graphics device.
 	context->UpdateSubresource1(
@@ -474,1149 +480,19 @@ void Sample3DSceneRenderer::Render()
 		0
 		);
 
-
-	///
-	////Start of Draw a Pyramid////
-
-	// Prepare the constant buffer to send it to the graphics device.
-	context->UpdateSubresource1(
-		m_constantBuffer.Get(),
-		0,
-		NULL,
-		&m_constantBufferData_Pyramid,
-		0,
-		0,
-		0
-	);
-
-
-	context->IASetVertexBuffers(
-		0,
-		1,
-		m_vertexBuffer_Pyramid.GetAddressOf(),
-		&stride,
-		&offset
-	);
-
-	context->IASetIndexBuffer(
-		m_indexBuffer_Pyramid.Get(),
-		DXGI_FORMAT_R16_UINT, // Each index is one 16-bit unsigned integer (short).
-		0
-	);
-
-	context->IASetInputLayout(m_inputLayout.Get());
-
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	context->VSSetShader(
-		m_vertexShader.Get(),
-		nullptr,
-		0
-		);
-
-	context->PSSetShader(
-		m_pixelShader.Get(),
-		nullptr,
-		0
-	);
-
-	context->DrawIndexed(
-		m_indexCount_Pyramid,
-		0,
-		0
-	);
-	//End of draw Pyramid
-
-	//Start of objModel VendingMachine
-	context->UpdateSubresource1(
-		m_constantBuffer_objModel.Get(),
-		0,
-		NULL,
-		&m_constantBufferData_objModel,
-		0,
-		0,
-		0
-	);
-	//update dir_buffer
-	context->UpdateSubresource1(
-	m_DirBuffer_objModel.Get(),
-	0,
-	NULL,
-	&m_dirLight_objModel,
-	0,
-	0,
-	0
-	);
-	//update point_buffer
-	context->UpdateSubresource1(
-		m_PointBuffer_objModel.Get(),
-		0,
-		NULL,
-		&m_pointLight_objModel,
-		0,
-		0,
-		0
-	);
-	//update spot_buffer
-	context->UpdateSubresource1(
-		m_SpotBuffer_objModel.Get(),
-		0,
-		NULL,
-		&m_spotLight_objModel,
-		0,
-		0,
-		0
-	);
-	stride = sizeof(VertexPositionUVNORMAL);
-	context->IASetVertexBuffers(
-		0,
-		1,
-		m_vertexBuffer_objModel.GetAddressOf(),
-		&stride,
-		&offset
-	);
-
-	context->IASetIndexBuffer(
-		m_indexBuffer_objModel.Get(),
-		DXGI_FORMAT_R32_UINT, // Each index is one 16-bit unsigned integer (short).
-		0
-	);
-
-	context->IASetInputLayout(m_inputLayout_objModel.Get());
-
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	context->VSSetShader(
-		m_vertexShader_objModel.Get(),
-		nullptr,
-		0
-	);
-
-	context->PSSetShader(
-		m_pixelShader_objModel.Get(),
-		nullptr,
-		0
-	);
+	//Draw My Objects
+	DrawPyramid();
+	DrawVendingMachine();
+	DrawBarrel();
+	DrawWall();
+	DrawFloor();
+	DrawDrone();
+	DrawSkybox();
+	DrawStation();
+	DrawAlien();
+	DrawTv();
 	
-	context->VSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer_objModel.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-	context->PSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer_objModel.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-	//Set lighting buffers
-	context->PSSetConstantBuffers1(
-	0,
-	1,
-	m_DirBuffer_objModel.GetAddressOf(),
-	nullptr,
-	nullptr
-	);
-	context->PSSetConstantBuffers1(
-	1,
-	1,
-	m_PointBuffer_objModel.GetAddressOf(),
-	nullptr,
-	nullptr
-	);
-	context->PSSetConstantBuffers1(
-		2,
-		1,
-		m_SpotBuffer_objModel.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-
-	context->PSSetShaderResources(0, 1, vendingMachineView.GetAddressOf());
-	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf());
-
-	context->DrawIndexed(
-		m_indexCount_objModel,
-		0,
-		0
-	);
-	//End of objModel vending Machine
-
-	//Draw Barrel//
-	context->UpdateSubresource1(
-		m_constantBuffer_barrel.Get(),
-		0,
-		NULL,
-		&m_constantBufferData_barrel,
-		0,
-		0,
-		0
-	);
-	//update dir_buffer
-	context->UpdateSubresource1(
-		m_DirBuffer_barrel.Get(),
-		0,
-		NULL,
-		&m_dirLight_barrel,
-		0,
-		0,
-		0
-	);
-	//update point_buffer
-	context->UpdateSubresource1(
-		m_PointBuffer_barrel.Get(),
-		0,
-		NULL,
-		&m_pointLight_barrel,
-		0,
-		0,
-		0
-	);
-	////update spot_buffer
-	context->UpdateSubresource1(
-	m_SpotBuffer_barrel.Get(),
-	0,
-	NULL,
-	&m_spotLight_barrel,
-	0,
-	0,
-	0
-	);
-	stride = sizeof(VertexPositionUVNORMAL);
-	context->IASetVertexBuffers(
-		0,
-		1,
-		m_vertexBuffer_barrel.GetAddressOf(),
-		&stride,
-		&offset
-	);
-
-	context->IASetIndexBuffer(
-		m_indexBuffer_barrel.Get(),
-		DXGI_FORMAT_R32_UINT,
-		0
-	);
-
-	context->IASetInputLayout(m_inputLayout_objModel.Get()); //Thats fine using same layout
-
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	context->VSSetShader(
-		m_vertexShader_objModel.Get(),
-		nullptr,
-		0
-	); //Thats fine using same shader
-
-	context->PSSetShader(
-		m_pixelShader_objModel.Get(),
-		nullptr,
-		0
-	); //Thats fine using same shader
-
-	context->VSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer_barrel.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-
-	context->PSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer_barrel.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-	//Set lighting buffers
-	context->PSSetConstantBuffers1(
-		0,
-		1,
-		m_DirBuffer_barrel.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-	context->PSSetConstantBuffers1(
-	1,
-	1,
-	m_PointBuffer_barrel.GetAddressOf(),
-	nullptr,
-	nullptr
-	);
-	context->PSSetConstantBuffers1(
-	2,
-	1,
-	m_SpotBuffer_barrel.GetAddressOf(),
-	nullptr,
-	nullptr
-	);
-	context->PSSetShaderResources(0, 1, barrelView.GetAddressOf());
-	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf()); //thats fine using same sampler
-
-	context->DrawIndexed(
-		m_indexCount_barrel,
-		0,
-		0
-	);
-	///
-
-	//Draw wall//
-	//context->UpdateSubresource1(
-	//	m_constantBuffer_wall.Get(),
-	//	0,
-	//	NULL,
-	//	&m_constantBufferData_wall,
-	//	0,
-	//	0,
-	//	0
-	//);
-	//update dir_buffer
-	context->UpdateSubresource1(
-		m_DirBuffer_wall.Get(),
-		0,
-		NULL,
-		&m_dirLight_wall,
-		0,
-		0,
-		0
-	);
-	//update point_buffer
-	context->UpdateSubresource1(
-		m_PointBuffer_wall.Get(),
-		0,
-		NULL,
-		&m_pointLight_wall,
-		0,
-		0,
-		0
-	);
-	//update spot_buffer
-	context->UpdateSubresource1(
-	m_SpotBuffer_wall.Get(),
-	0,
-	NULL,
-	&m_spotLight_wall,
-	0,
-	0,
-	0
-	);
-	context->UpdateSubresource1(
-		m_constantInstanceBuffer_wall.Get(),
-		0,
-		NULL,
-		&m_instancing_wall,
-		0,
-		0,
-		0
-	);
-	stride = sizeof(VertexPositionUVNORMAL);
-	context->IASetVertexBuffers(
-		0,
-		1,
-		m_vertexBuffer_wall.GetAddressOf(),
-		&stride,
-		&offset
-	);
-
-	context->IASetIndexBuffer(
-		m_indexBuffer_wall.Get(),
-		DXGI_FORMAT_R32_UINT,
-		0
-	);
-
-	context->IASetInputLayout(m_inputLayout_objModel.Get()); //Thats fine using same layout
-
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	//context->VSSetShader(
-	//	m_vertexShader_objModel.Get(),
-	//	nullptr,
-	//	0
-	//); //Thats fine using same shader
-	context->VSSetShader(
-		m_vertexShader_wall.Get(),
-		nullptr,
-		0
-	); //Thats fine using same shader as floor for instancing
-	context->PSSetShader(
-		m_pixelShader_objModel.Get(),
-		nullptr,
-		0
-	); //Thats fine using same shader
-
-	/*context->VSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer_wall.GetAddressOf(),
-		nullptr,
-		nullptr
-	);*/
-	context->VSSetConstantBuffers1(
-		1,
-		1,
-		m_constantInstanceBuffer_wall.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-	context->PSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer_wall.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-	//Set lighting buffers
-	context->PSSetConstantBuffers1(
-		0,
-		1,
-		m_DirBuffer_wall.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-	context->PSSetConstantBuffers1(
-	1,
-	1,
-	m_PointBuffer_wall.GetAddressOf(),
-	nullptr,
-	nullptr
-	);
-	context->PSSetConstantBuffers1(
-	2,
-	1,
-	m_SpotBuffer_wall.GetAddressOf(),
-	nullptr,
-	nullptr
-	);
-	context->PSSetShaderResources(0, 1, wallView.GetAddressOf());
-	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf()); //thats fine using same sampler
-
-	/*context->DrawIndexed(
-		m_indexCount_wall,
-		0,
-		0
-	);*/
-	context->DrawIndexedInstanced(
-		m_indexCount_wall,
-		64,
-		0,
-		0,
-		0
-	);
-
-	//Draw floor//
-	//context->UpdateSubresource1(
-	//	m_constantBuffer_floor.Get(),
-	//	0,
-	//	NULL,
-	//	&m_constantBufferData_floor,
-	//	0,
-	//	0,
-	//	0
-	//);
-
-	//update dir_buffer
-	context->UpdateSubresource1(
-		m_DirBuffer_floor.Get(),
-		0,
-		NULL,
-		&m_dirLight_floor,
-		0,
-		0,
-		0
-	);
-	//update point_buffer
-	context->UpdateSubresource1(
-		m_PointBuffer_floor.Get(),
-		0,
-		NULL,
-		&m_pointLight_floor,
-		0,
-		0,
-		0
-	);
-	//update spot_buffer
-	context->UpdateSubresource1(
-		m_SpotBuffer_floor.Get(),
-		0,
-		NULL,
-		&m_spotLight_floor,
-		0,
-		0,
-		0
-	);
-	//update instancing buffer
-	context->UpdateSubresource1(
-		m_constantInstanceBuffer_floor.Get(),
-		0,
-		NULL,
-		&m_instancing_floor,
-		0,
-		0,
-		0
-	);
-
-	stride = sizeof(VertexPositionUVNORMAL);
-	context->IASetVertexBuffers(
-		0,
-		1,
-		m_vertexBuffer_floor.GetAddressOf(),
-		&stride,
-		&offset
-	);
-
-	context->IASetIndexBuffer(
-		m_indexBuffer_floor.Get(),
-		DXGI_FORMAT_R32_UINT,
-		0
-	);
-
-	context->IASetInputLayout(m_inputLayout_objModel.Get()); //Thats fine using same layout
-
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	//context->VSSetShader(
-	//	m_vertexShader_objModel.Get(),
-	//	nullptr,
-	//	0
-	//); //Thats fine using same shader
-	context->VSSetShader(
-		m_vertexShader_floor.Get(),
-		nullptr,
-		0
-	); 
-
-	context->PSSetShader(
-		m_pixelShader_objModel.Get(),
-		nullptr,
-		0
-	); //Thats fine using same shader
-
-	/*context->VSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer_floor.GetAddressOf(),
-		nullptr,
-		nullptr
-	);*/
-
-	//Set Instance cBuffer
-	context->VSSetConstantBuffers1(
-		1,
-		1,
-		m_constantInstanceBuffer_floor.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-
-	//context->PSSetConstantBuffers1(
-	//	0,
-	//	1,
-	//	m_constantBuffer_floor.GetAddressOf(),
-	//	nullptr,
-	//	nullptr
-	//);
-
-	//Set lighting buffers
-	context->PSSetConstantBuffers1(
-		0,
-		1,
-		m_DirBuffer_floor.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-	context->PSSetConstantBuffers1(
-		1,
-		1,
-		m_PointBuffer_floor.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-	context->PSSetConstantBuffers1(
-		2,
-		1,
-		m_SpotBuffer_floor.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
 	
-
-	context->PSSetShaderResources(0, 1, floorView.GetAddressOf());
-	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf()); //thats fine using same sampler
-
-	/*context->DrawIndexed(
-		m_indexCount_floor,
-		0,
-		0
-	);*/
-
-	context->DrawIndexedInstanced(
-		m_indexCount_floor,
-		64,
-		0,
-		0,
-		0
-	);
-
-	///
-
-	//Draw drone//
-	context->UpdateSubresource1(
-		m_constantBuffer_drone.Get(),
-		0,
-		NULL,
-		&m_constantBufferData_drone,
-		0,
-		0,
-		0
-	);
-	//update dir_buffer
-	context->UpdateSubresource1(
-		m_DirBuffer_drone.Get(),
-		0,
-		NULL,
-		&m_dirLight_drone,
-		0,
-		0,
-		0
-	);
-	//update point_buffer
-	context->UpdateSubresource1(
-		m_PointBuffer_drone.Get(),
-		0,
-		NULL,
-		&m_pointLight_drone,
-		0,
-		0,
-		0
-	);
-	////update spot_buffer
-	context->UpdateSubresource1(
-	m_SpotBuffer_drone.Get(),
-	0,
-	NULL,
-	&m_spotLight_drone,
-	0,
-	0,
-	0
-	);
-	stride = sizeof(VertexPositionUVNORMAL);
-	context->IASetVertexBuffers(
-		0,
-		1,
-		m_vertexBuffer_drone.GetAddressOf(),
-		&stride,
-		&offset
-	);
-
-	context->IASetIndexBuffer(
-		m_indexBuffer_drone.Get(),
-		DXGI_FORMAT_R32_UINT,
-		0
-	);
-
-	context->IASetInputLayout(m_inputLayout_objModel.Get()); //Thats fine using same layout
-
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	context->VSSetShader(
-		m_vertexShader_objModel.Get(),
-		nullptr,
-		0
-	); //Thats fine using same shader
-
-	context->PSSetShader(
-		m_pixelShader_objModel.Get(),
-		nullptr,
-		0
-	); //Thats fine using same shader
-
-	context->VSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer_drone.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-	context->PSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer_drone.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-	//Set lighting buffers
-	context->PSSetConstantBuffers1(
-		0,
-		1,
-		m_DirBuffer_drone.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-	context->PSSetConstantBuffers1(
-		1,
-		1,
-		m_PointBuffer_drone.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-	context->PSSetConstantBuffers1(
-		2,
-		1,
-		m_SpotBuffer_drone.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-	context->PSSetShaderResources(0, 1, droneView.GetAddressOf());
-	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf()); //thats fine using same sampler
-
-	context->DrawIndexed(
-		m_indexCount_drone,
-		0,
-		0
-	);
-	///
-
-	//Draw Skybox//
-	context->UpdateSubresource1(
-		m_constantBuffer_sky.Get(),
-		0,
-		NULL,
-		&m_constantBufferData_sky,
-		0,
-		0,
-		0
-	);
-	//update dir_buffer
-	context->UpdateSubresource1(
-		m_DirBuffer_sky.Get(),
-		0,
-		NULL,
-		&m_dirLight_sky,
-		0,
-		0,
-		0
-	);
-	//update point_buffer
-	context->UpdateSubresource1(
-		m_PointBuffer_sky.Get(),
-		0,
-		NULL,
-		&m_pointLight_sky,
-		0,
-		0,
-		0
-	);
-	////update spot_buffer
-	context->UpdateSubresource1(
-	m_SpotBuffer_sky.Get(),
-	0,
-	NULL,
-	&m_spotLight_sky,
-	0,
-	0,
-	0
-	);
-	stride = sizeof(VertexPositionUVNORMAL);
-	context->IASetVertexBuffers(
-		0,
-		1,
-		m_vertexBuffer_sky.GetAddressOf(),
-		&stride,
-		&offset
-	);
-
-	context->IASetIndexBuffer(
-		m_indexBuffer_sky.Get(),
-		DXGI_FORMAT_R32_UINT,
-		0
-	);
-
-	context->IASetInputLayout(m_inputLayout_objModel.Get()); //Thats fine using same layout
-
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	context->VSSetShader(
-		m_vertexShader_objModel.Get(),
-		nullptr,
-		0
-	); //Thats fine using same shader
-
-	context->PSSetShader(
-		m_pixelShader_objModel.Get(),
-		nullptr,
-		0
-	); //Thats fine using same shader
-
-	context->VSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer_sky.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-	context->PSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer_sky.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-	//Set lighting buffers
-	context->PSSetConstantBuffers1(
-		0,
-		1,
-		m_DirBuffer_sky.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-	context->PSSetConstantBuffers1(
-		1,
-		1,
-		m_PointBuffer_sky.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-	context->PSSetConstantBuffers1(
-		2,
-		1,
-		m_SpotBuffer_sky.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-	context->PSSetShaderResources(0, 1, skyView.GetAddressOf());
-	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf()); //thats fine using same sampler
-
-	context->DrawIndexed(
-		m_indexCount_sky,
-		0,
-		0
-	);
-	///
-
-	//Draw Station//
-	context->UpdateSubresource1(
-		m_constantBuffer_station.Get(),
-		0,
-		NULL,
-		&m_constantBufferData_station,
-		0,
-		0,
-		0
-	);
-	//update dir_buffer
-	context->UpdateSubresource1(
-		m_DirBuffer_station.Get(),
-		0,
-		NULL,
-		&m_dirLight_station,
-		0,
-		0,
-		0
-	);
-	//update point_buffer
-	context->UpdateSubresource1(
-		m_PointBuffer_station.Get(),
-		0,
-		NULL,
-		&m_pointLight_station,
-		0,
-		0,
-		0
-	);
-	////update spot_buffer
-	context->UpdateSubresource1(
-	m_SpotBuffer_station.Get(),
-	0,
-	NULL,
-	&m_spotLight_station,
-	0,
-	0,
-	0
-	);
-	stride = sizeof(VertexPositionUVNORMAL);
-	context->IASetVertexBuffers(
-		0,
-		1,
-		m_vertexBuffer_station.GetAddressOf(),
-		&stride,
-		&offset
-	);
-
-	context->IASetIndexBuffer(
-		m_indexBuffer_station.Get(),
-		DXGI_FORMAT_R32_UINT,
-		0
-	);
-
-	context->IASetInputLayout(m_inputLayout_objModel.Get()); //Thats fine using same layout
-
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	context->VSSetShader(
-		m_vertexShader_objModel.Get(),
-		nullptr,
-		0
-	); //Thats fine using same shader
-
-	context->PSSetShader(
-		m_pixelShader_objModel.Get(),
-		nullptr,
-		0
-	); //Thats fine using same shader
-
-	context->VSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer_station.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-	context->PSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer_station.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-	//Set lighting buffers
-	context->PSSetConstantBuffers1(
-		0,
-		1,
-		m_DirBuffer_station.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-	context->PSSetConstantBuffers1(
-		1,
-		1,
-		m_PointBuffer_station.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-	context->PSSetConstantBuffers1(
-		2,
-		1,
-		m_SpotBuffer_station.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-	context->PSSetShaderResources(0, 1, stationView.GetAddressOf());
-	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf()); //thats fine using same sampler
-
-	context->DrawIndexed(
-		m_indexCount_station,
-		0,
-		0
-	);
-	///
-
-
-	//Draw Alien//
-	context->UpdateSubresource1(
-		m_constantBuffer_alien.Get(),
-		0,
-		NULL,
-		&m_constantBufferData_alien,
-		0,
-		0,
-		0
-	);
-	//update dir_buffer
-	context->UpdateSubresource1(
-		m_DirBuffer_alien.Get(),
-		0,
-		NULL,
-		&m_dirLight_alien,
-		0,
-		0,
-		0
-	);
-	//update point_buffer
-	context->UpdateSubresource1(
-		m_PointBuffer_alien.Get(),
-		0,
-		NULL,
-		&m_pointLight_alien,
-		0,
-		0,
-		0
-	);
-	////update spot_buffer
-	context->UpdateSubresource1(
-	m_SpotBuffer_alien.Get(),
-	0,
-	NULL,
-	&m_spotLight_alien,
-	0,
-	0,
-	0
-	);
-	stride = sizeof(VertexPositionUVNORMAL);
-	context->IASetVertexBuffers(
-		0,
-		1,
-		m_vertexBuffer_alien.GetAddressOf(),
-		&stride,
-		&offset
-	);
-
-	context->IASetIndexBuffer(
-		m_indexBuffer_alien.Get(),
-		DXGI_FORMAT_R32_UINT,
-		0
-	);
-
-	context->IASetInputLayout(m_inputLayout_objModel.Get()); //Thats fine using same layout
-
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	context->VSSetShader(
-		m_vertexShader_objModel.Get(),
-		nullptr,
-		0
-	); //Thats fine using same shader
-
-	context->PSSetShader(
-		m_pixelShader_objModel.Get(),
-		nullptr,
-		0
-	); //Thats fine using same shader
-
-	context->VSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer_alien.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-	context->PSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer_alien.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-	//Set lighting buffers
-	context->PSSetConstantBuffers1(
-		0,
-		1,
-		m_DirBuffer_alien.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-	context->PSSetConstantBuffers1(
-		1,
-		1,
-		m_PointBuffer_alien.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-	context->PSSetConstantBuffers1(
-		2,
-		1,
-		m_SpotBuffer_alien.GetAddressOf(),
-		nullptr,
-		nullptr
-	);
-	context->PSSetShaderResources(0, 1, alienView.GetAddressOf());
-	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf()); //thats fine using same sampler
-
-	context->DrawIndexed(
-		m_indexCount_alien,
-		0,
-		0
-	);
-
-	//Render2Texture (texture)
-
-	////Render 2 Texture (TV)
-	//context->UpdateSubresource1(
-	//	m_constantBuffer_tv.Get(),
-	//	0,
-	//	NULL,
-	//	&m_constantBufferData_tv,
-	//	0,
-	//	0,
-	//	0
-	//);
-	////update dir_buffer
-	//context->UpdateSubresource1(
-	//	m_DirBuffer_tv.Get(),
-	//	0,
-	//	NULL,
-	//	&m_dirLight_tv,
-	//	0,
-	//	0,
-	//	0
-	//);
-	//
-	//stride = sizeof(VertexPositionUVNORMAL);
-	//context->IASetVertexBuffers(
-	//	0,
-	//	1,
-	//	m_vertexBuffer_tv.GetAddressOf(),
-	//	&stride,
-	//	&offset
-	//);
-
-	//context->IASetIndexBuffer(
-	//	m_indexBuffer_tv.Get(),
-	//	DXGI_FORMAT_R32_UINT, // Each index is one 16-bit unsigned integer (short).
-	//	0
-	//);
-
-	//context->IASetInputLayout(m_inputLayout_objModel.Get());
-
-	//context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	//context->VSSetShader(
-	//	m_vertexShader_objModel.Get(),
-	//	nullptr,
-	//	0
-	//);
-
-	//context->PSSetShader(
-	//	m_pixelShader_objModel.Get(),
-	//	nullptr,
-	//	0
-	//);
-
-	//context->VSSetConstantBuffers1(
-	//	0,
-	//	1,
-	//	m_constantBuffer_tv.GetAddressOf(),
-	//	nullptr,
-	//	nullptr
-	//);
-	//context->PSSetConstantBuffers1(
-	//	0,
-	//	1,
-	//	m_constantBuffer_tv.GetAddressOf(),
-	//	nullptr,
-	//	nullptr
-	//);
-	////Set lighting buffers
-	//context->PSSetConstantBuffers1(
-	//	0,
-	//	1,
-	//	m_DirBuffer_tv.GetAddressOf(),
-	//	nullptr,
-	//	nullptr
-	//);
-
-	//context->PSSetShaderResources(0, 1, Render2TextureSRV.GetAddressOf());
-	//context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf());
-
-	//context->DrawIndexed(
-	//	m_indexCount_tv,
-	//	0,
-	//	0
-	//);
-
-	/////
 
 
 
@@ -2602,67 +1478,67 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 			((ComPtr<ID3D11Resource>)alienTexture).GetAddressOf(),
 			alienView.GetAddressOf());
 
-		///////////////////////////////////End of Alien////////////////////////////////////
+///////////////////////////////////End of Alien////////////////////////////////////
 
-		/////////////////////////////////Render2Texture TV/////////////////////////////////////
-		//std::vector<VertexPositionUVNORMAL> tvVertices;
-		//std::vector<unsigned int> tvIndices;
+///////////////////////////////Render2Texture TV/////////////////////////////////////
+		std::vector<VertexPositionUVNORMAL> tvVertices;
+		std::vector<unsigned int> tvIndices;
 
-		//bool res9 = LoadOBJModel("Assets/wall.obj", tvVertices, tvIndices);
+		bool res9 = LoadOBJModel("Assets/wall.obj", tvVertices, tvIndices);
 
-		//m_indexCount_tv = tvIndices.size();
+		m_indexCount_tv = tvIndices.size();
 
 
-		//if (res9 == true)
-		//{
-		//	CD3D11_BUFFER_DESC constantBufferDesc_tv(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
-		//	DX::ThrowIfFailed(
-		//		m_deviceResources->GetD3DDevice()->CreateBuffer(
-		//			&constantBufferDesc_tv,
-		//			nullptr,
-		//			&m_constantBuffer_tv
-		//		)
-		//	);
-		//	CD3D11_BUFFER_DESC DirBufferDesc_tv(sizeof(dir_light), D3D11_BIND_CONSTANT_BUFFER);
-		//	DX::ThrowIfFailed(
-		//		m_deviceResources->GetD3DDevice()->CreateBuffer(
-		//			&DirBufferDesc_tv,
-		//			nullptr,
-		//			&m_DirBuffer_tv
-		//		)
-		//	);
+		if (res9 == true)
+		{
+			CD3D11_BUFFER_DESC constantBufferDesc_tv(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&constantBufferDesc_tv,
+					nullptr,
+					&m_constantBuffer_tv
+				)
+			);
+			CD3D11_BUFFER_DESC DirBufferDesc_tv(sizeof(dir_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&DirBufferDesc_tv,
+					nullptr,
+					&m_DirBuffer_tv
+				)
+			);
 
-		//	//Data setup//
-		//	D3D11_SUBRESOURCE_DATA vertexBufferData_tv = { 0 };
-		//	vertexBufferData_tv.pSysMem = tvVertices.data();
-		//	vertexBufferData_tv.SysMemPitch = 0;
-		//	vertexBufferData_tv.SysMemSlicePitch = 0;
+			//Data setup//
+			D3D11_SUBRESOURCE_DATA vertexBufferData_tv = { 0 };
+			vertexBufferData_tv.pSysMem = tvVertices.data();
+			vertexBufferData_tv.SysMemPitch = 0;
+			vertexBufferData_tv.SysMemSlicePitch = 0;
 
-		//	CD3D11_BUFFER_DESC vertexBufferDesc_tv(sizeof(VertexPositionUVNORMAL) * tvVertices.size(), D3D11_BIND_VERTEX_BUFFER);
-		//	DX::ThrowIfFailed(
-		//		m_deviceResources->GetD3DDevice()->CreateBuffer(
-		//			&vertexBufferDesc_tv,
-		//			&vertexBufferData_tv,
-		//			&m_vertexBuffer_tv
-		//		)
-		//	);
+			CD3D11_BUFFER_DESC vertexBufferDesc_tv(sizeof(VertexPositionUVNORMAL) * tvVertices.size(), D3D11_BIND_VERTEX_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&vertexBufferDesc_tv,
+					&vertexBufferData_tv,
+					&m_vertexBuffer_tv
+				)
+			);
 
-		//	D3D11_SUBRESOURCE_DATA indexBufferData_tv = { 0 };
-		//	indexBufferData_tv.pSysMem = tvIndices.data();
-		//	indexBufferData_tv.SysMemPitch = 0;
-		//	indexBufferData_tv.SysMemSlicePitch = 0;
+			D3D11_SUBRESOURCE_DATA indexBufferData_tv = { 0 };
+			indexBufferData_tv.pSysMem = tvIndices.data();
+			indexBufferData_tv.SysMemPitch = 0;
+			indexBufferData_tv.SysMemSlicePitch = 0;
 
-		//	CD3D11_BUFFER_DESC indexBufferDesc_tv(sizeof(unsigned int) * tvIndices.size(), D3D11_BIND_INDEX_BUFFER);
-		//	DX::ThrowIfFailed(
-		//		m_deviceResources->GetD3DDevice()->CreateBuffer(
-		//			&indexBufferDesc_tv,
-		//			&indexBufferData_tv,
-		//			&m_indexBuffer_tv
-		//		)
-		//	);
-		//}
+			CD3D11_BUFFER_DESC indexBufferDesc_tv(sizeof(unsigned int) * tvIndices.size(), D3D11_BIND_INDEX_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&indexBufferDesc_tv,
+					&indexBufferData_tv,
+					&m_indexBuffer_tv
+				)
+			);
+		}
 
-		//RenderToTexture();
+		
 }
 
 void Sample3DSceneRenderer::ReleaseDeviceDependentResources()
@@ -2788,20 +1664,20 @@ void Sample3DSceneRenderer::ReleaseDeviceDependentResources()
 
 
 	//R2T
-	/*Render2Texture.Reset();
+	Render2Texture_Screen.Reset();
+	Render2Texture_Depth.Reset();
 	Render2TextureSRV.Reset();
 	Render2TextureRTV.Reset();
-	m_vertexBuffer_R2T.Reset();
-	m_indexBuffer_R2T.Reset();
-	m_DepthBuffer_R2T.Reset();*/
+	Render2TextureDSV.Reset();
+
 	
 	//tv
-	/*m_vertexBuffer_tv.Reset();
+	m_vertexBuffer_tv.Reset();
 	m_indexBuffer_tv.Reset();
 	m_constantBuffer_tv.Reset();	
 	tvTexture.Reset();
 	tvView.Reset();	
-	m_DirBuffer_tv.Reset();*/
+	m_DirBuffer_tv.Reset();
 	///
 }
 
@@ -3027,85 +1903,121 @@ bool Sample3DSceneRenderer::LoadSkyBox(const char* path, std::vector <VertexPosi
 
 void Sample3DSceneRenderer::RenderToTexture()
 {
-	////Setting up Texture
-	//Size outputSize = m_deviceResources->GetOutputSize();
-	//D3D11_TEXTURE2D_DESC texDesc;
-	//ZeroMemory(&texDesc, sizeof(texDesc));
-	//texDesc.Width = outputSize.Width / 4;
-	//texDesc.Height = outputSize.Height / 3;
-	//texDesc.MipLevels = 1;
-	//texDesc.ArraySize = 1;
-	//texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-	//texDesc.Usage = D3D11_USAGE_DEFAULT;
-	//texDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-	//texDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
-	//texDesc.SampleDesc.Count = 1;
+	//Setting up Screen Texture
+	Size outputSize = m_deviceResources->GetOutputSize();
+	D3D11_TEXTURE2D_DESC texDesc;
+	ZeroMemory(&texDesc, sizeof(texDesc));
+	texDesc.Width = outputSize.Width;
+	texDesc.Height = outputSize.Height;
+	texDesc.MipLevels = 1;
+	texDesc.ArraySize = 1;
+	texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	texDesc.Usage = D3D11_USAGE_DEFAULT;
+	texDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+	texDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
+	texDesc.SampleDesc.Count = 1;
 
-	//D3D11_SUBRESOURCE_DATA texSrc;
-	//ZeroMemory(&texSrc, sizeof(texSrc));
-	//texSrc.pSysMem = NULL;
-	//texSrc.SysMemPitch = 0;
-	//texSrc.SysMemSlicePitch = 0;
+	m_deviceResources->GetD3DDevice()->CreateTexture2D(&texDesc, NULL, &Render2Texture_Screen);
 
-	//m_deviceResources->GetD3DDevice()->CreateTexture2D(&texDesc, &texSrc, &Render2Texture);
+	//Setting up Depth Texture
+	D3D11_TEXTURE2D_DESC texDesc2;
+	ZeroMemory(&texDesc2, sizeof(texDesc2));
+	texDesc2.Width = outputSize.Width;
+	texDesc2.Height = outputSize.Height;
+	texDesc2.MipLevels = 1;
+	texDesc2.ArraySize = 1;
+	texDesc2.Format = DXGI_FORMAT_D16_UNORM;
+	texDesc2.Usage = D3D11_USAGE_DEFAULT;
+	texDesc2.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+	texDesc2.SampleDesc.Count = 1;
+	
 
-	////Render2TextureRTV;
-	//D3D11_RENDER_TARGET_VIEW_DESC RTV_desc;
-	//ZeroMemory(&RTV_desc, sizeof(RTV_desc));
-	//RTV_desc.Format = texDesc.Format;
-	//RTV_desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE3D;
-	//RTV_desc.Texture3D.MipSlice = 0;
+	m_deviceResources->GetD3DDevice()->CreateTexture2D(&texDesc2, NULL, &Render2Texture_Depth);
 
-	//m_deviceResources->GetD3DDevice()->CreateRenderTargetView(Render2Texture.Get(), &RTV_desc, &Render2TextureRTV);
+	//Render2TextureRTV;
+	D3D11_RENDER_TARGET_VIEW_DESC RTV_desc;
+	ZeroMemory(&RTV_desc, sizeof(RTV_desc));
+	RTV_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	RTV_desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+	RTV_desc.Texture2D.MipSlice = 0;
 
-	////Render2TextureSRV;
-	//D3D11_SHADER_RESOURCE_VIEW_DESC SRV_desc;
-	//ZeroMemory(&SRV_desc, sizeof(SRV_desc));
-	//SRV_desc.Format = texDesc.Format;
-	//SRV_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
-	//SRV_desc.Texture3D.MostDetailedMip = 1;
-	//SRV_desc.Texture3D.MipLevels = 1;
+	m_deviceResources->GetD3DDevice()->CreateRenderTargetView(Render2Texture_Screen.Get(), &RTV_desc, &Render2TextureRTV);
 
-	//m_deviceResources->GetD3DDevice()->CreateShaderResourceView(Render2Texture.Get(), &SRV_desc, &Render2TextureSRV);
+	//Render2TextureSRV;
+	D3D11_SHADER_RESOURCE_VIEW_DESC SRV_desc;
+	ZeroMemory(&SRV_desc, sizeof(SRV_desc));
+	SRV_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+	SRV_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+	SRV_desc.Texture2D.MostDetailedMip = 0;
+	SRV_desc.Texture2D.MipLevels = 1;
 
-	////Render2TextureDSV;
-	//m_deviceResources->GetD3DDevice()->CreateDepthStencilView(Render2Texture.Get(), NULL, &Render2TextureDSV);
+	m_deviceResources->GetD3DDevice()->CreateShaderResourceView(Render2Texture_Screen.Get(), &SRV_desc, &Render2TextureSRV);
+
+	//Render2TextureDSV;
+	D3D11_DEPTH_STENCIL_VIEW_DESC DSV_desc;
+	ZeroMemory(&DSV_desc, sizeof(DSV_desc));
+	DSV_desc.Format = DXGI_FORMAT_D16_UNORM;
+	DSV_desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+	DSV_desc.Texture2D.MipSlice = 0;
+
+	m_deviceResources->GetD3DDevice()->CreateDepthStencilView(Render2Texture_Depth.Get(), &DSV_desc, &Render2TextureDSV);
 
 
-	////BEFORE RENDERING
-	//
-	//m_deviceResources->GetD3DDeviceContext()->OMSetRenderTargets(1, &Render2TextureRTV, Render2TextureDSV.Get());
-	//m_deviceResources->GetD3DDeviceContext()->ClearDepthStencilView(Render2TextureDSV.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	//BEFORE RENDERING
+	m_deviceResources->GetD3DDeviceContext()->OMSetRenderTargets(1, Render2TextureRTV.GetAddressOf(), Render2TextureDSV.Get());
+	m_deviceResources->GetD3DDeviceContext()->ClearRenderTargetView(Render2TextureRTV.Get(), DirectX::Colors::CornflowerBlue);
+	m_deviceResources->GetD3DDeviceContext()->ClearDepthStencilView(Render2TextureDSV.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
 	////Update World,View,Projection
-	//XMMATRIX camera2 = XMLoadFloat4x4(&camera);
-	//camera2 = XMMatrixTranspose(camera2 * XMMatrixTranslation(-50.0f, 0.0f, 0.0f) * XMMatrixRotationY(3.14159f));
-	//XMVECTOR camPos2 = camera2.r[3];
+	//world2 = world;
+	////camera2 = camera;
+	//proj2 = proj;
 
-	//////Skybox////
-	//m_constantBufferData_sky = m_constantBufferData;
+ //   XMStoreFloat4x4(&camera2, XMMatrixIdentity());
+	//XMMATRIX cameraTmp = XMLoadFloat4x4(&camera2);
+	//cameraTmp = XMMatrixTranspose(cameraTmp * XMMatrixTranslation(-50.0f, 0.0f, 0.0f) * XMMatrixRotationY(3.14159f));
+	//XMVECTOR camPos2 = cameraTmp.r[3];
+	//XMStoreFloat4x4(&camera2, cameraTmp);
+
+	//XMMATRIX projTmp = XMLoadFloat4x4(&proj2);
+	//float AspectRatio = 2.5f / 1.5f;
+	//projTmp = XMMatrixPerspectiveFovLH(1.0f, AspectRatio, 0.0f, 1.0f);
+	////projTmp = XMMatrixPerspectiveLH()
+	//XMStoreFloat4x4(&proj2, projTmp);
+	//try 90*
+	//////Alien////
+	
+	//XMStoreFloat4x4(&m_constantBufferData_alien.model, XMMatrixTranspose(XMMatrixTranslation(-8.5f, -4.0f, 1.0f)*XMMatrixRotationY(3.14159f)* XMMatrixScaling(0.9f, 0.9f, 0.9f)));
+	//XMStoreFloat4x4(&m_constantBufferData_alien.view, XMMatrixTranspose(XMMatrixInverse(0, cameraTmp)));
+
+
+	////Skybox////
+	
 	//XMStoreFloat4x4(&m_constantBufferData_sky.model, XMMatrixTranspose(XMMatrixScaling(100.0f, 100.0f, 100.0f)*XMMatrixTranslation(XMVectorGetX(camPos2), XMVectorGetY(camPos2), XMVectorGetZ(camPos2))));
-	//XMStoreFloat4x4(&m_constantBufferData_sky.view, XMMatrixTranspose(XMMatrixInverse(0, camera2)));
+	//XMStoreFloat4x4(&m_constantBufferData_sky.view, XMMatrixTranspose(XMMatrixInverse(0, cameraTmp)));
 
-	//XMStoreFloat4(&m_dirLight_drone.dir_direction, XMVECTOR{ 0.0f, 0.0f, 0.0f, 0.0f });
-	//XMStoreFloat4(&m_dirLight_drone.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+	////Station////
+	
+	/*XMStoreFloat4x4(&m_constantBufferData_station.model, XMMatrixTranspose(XMMatrixScaling(100.0f, 100.0f, 100.0f)*XMMatrixTranslation(7.0f, 8.0f, -10.0f)));
+	XMStoreFloat4x4(&m_constantBufferData_station.view, XMMatrixTranspose(XMMatrixInverse(0, cameraTmp)));*/
 
-	//////Station////
-	//m_constantBufferData_station = m_constantBufferData;
-	//XMStoreFloat4x4(&m_constantBufferData_station.model, XMMatrixTranspose(XMMatrixScaling(100.0f, 100.0f, 100.0f)*XMMatrixTranslation(7.0f, 8.0f, -10.0f)));
-	//XMStoreFloat4x4(&m_constantBufferData_station.view, XMMatrixTranspose(XMMatrixInverse(0, camera2)));
 
-	//XMStoreFloat4(&m_dirLight_station.dir_direction, XMVECTOR{ 0.0f, 0.0f, 0.0f, 0.0f });
-	//XMStoreFloat4(&m_dirLight_station.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+	//RENDERING
+	DrawVendingMachine();
+	DrawBarrel();
+	DrawWall();
+	DrawFloor();
+	DrawDrone();
+	DrawSkybox();
+	DrawStation();
+	DrawAlien();
 
-	////RENDERING
-	//DrawSkybox();
-	//DrawStation();
-
-	////AFTER RENDERING
+	//AFTER RENDERING
 	//m_deviceResources->GetD3DDeviceContext()->GenerateMips(Render2TextureSRV.Get());
-	/////
+	///
 }
+
+
 
 void Sample3DSceneRenderer::DrawSkybox()
 {
@@ -3350,4 +2262,902 @@ void Sample3DSceneRenderer::DrawStation()
 		0,
 		0
 	);
+}
+
+void Sample3DSceneRenderer::DrawPyramid()
+{
+	////Start of Draw a Pyramid////
+	auto context = m_deviceResources->GetD3DDeviceContext();
+	UINT stride = 0;
+	UINT offset = 0;
+	stride = sizeof(VertexPositionColor);
+
+	// Prepare the constant buffer to send it to the graphics device.
+	context->UpdateSubresource1(
+		m_constantBuffer.Get(),
+		0,
+		NULL,
+		&m_constantBufferData_Pyramid,
+		0,
+		0,
+		0
+	);
+
+
+	context->IASetVertexBuffers(
+		0,
+		1,
+		m_vertexBuffer_Pyramid.GetAddressOf(),
+		&stride,
+		&offset
+	);
+
+	context->IASetIndexBuffer(
+		m_indexBuffer_Pyramid.Get(),
+		DXGI_FORMAT_R16_UINT, // Each index is one 16-bit unsigned integer (short).
+		0
+	);
+
+	context->IASetInputLayout(m_inputLayout.Get());
+
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	context->VSSetShader(
+		m_vertexShader.Get(),
+		nullptr,
+		0
+	);
+
+	context->PSSetShader(
+		m_pixelShader.Get(),
+		nullptr,
+		0
+	);
+
+	context->DrawIndexed(
+		m_indexCount_Pyramid,
+		0,
+		0
+	);
+	//End of draw Pyramid
+}
+
+void Sample3DSceneRenderer::DrawVendingMachine()
+{
+	auto context = m_deviceResources->GetD3DDeviceContext();
+	UINT stride = 0;
+	UINT offset = 0;
+	//Start of objModel VendingMachine
+	context->UpdateSubresource1(
+		m_constantBuffer_objModel.Get(),
+		0,
+		NULL,
+		&m_constantBufferData_objModel,
+		0,
+		0,
+		0
+	);
+	//update dir_buffer
+	context->UpdateSubresource1(
+		m_DirBuffer_objModel.Get(),
+		0,
+		NULL,
+		&m_dirLight_objModel,
+		0,
+		0,
+		0
+	);
+	//update point_buffer
+	context->UpdateSubresource1(
+		m_PointBuffer_objModel.Get(),
+		0,
+		NULL,
+		&m_pointLight_objModel,
+		0,
+		0,
+		0
+	);
+	//update spot_buffer
+	context->UpdateSubresource1(
+		m_SpotBuffer_objModel.Get(),
+		0,
+		NULL,
+		&m_spotLight_objModel,
+		0,
+		0,
+		0
+	);
+	stride = sizeof(VertexPositionUVNORMAL);
+	context->IASetVertexBuffers(
+		0,
+		1,
+		m_vertexBuffer_objModel.GetAddressOf(),
+		&stride,
+		&offset
+	);
+
+	context->IASetIndexBuffer(
+		m_indexBuffer_objModel.Get(),
+		DXGI_FORMAT_R32_UINT, // Each index is one 16-bit unsigned integer (short).
+		0
+	);
+
+	context->IASetInputLayout(m_inputLayout_objModel.Get());
+
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	context->VSSetShader(
+		m_vertexShader_objModel.Get(),
+		nullptr,
+		0
+	);
+
+	context->PSSetShader(
+		m_pixelShader_objModel.Get(),
+		nullptr,
+		0
+	);
+
+	context->VSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_objModel.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_objModel.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	//Set lighting buffers
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_DirBuffer_objModel.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		1,
+		1,
+		m_PointBuffer_objModel.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		2,
+		1,
+		m_SpotBuffer_objModel.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
+	context->PSSetShaderResources(0, 1, vendingMachineView.GetAddressOf());
+	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf());
+
+	context->DrawIndexed(
+		m_indexCount_objModel,
+		0,
+		0
+	);
+	//End of objModel vending Machine
+}
+
+void Sample3DSceneRenderer::DrawBarrel()
+{
+	auto context = m_deviceResources->GetD3DDeviceContext();
+	UINT stride = 0;
+	UINT offset = 0;
+	//Draw Barrel//
+	context->UpdateSubresource1(
+		m_constantBuffer_barrel.Get(),
+		0,
+		NULL,
+		&m_constantBufferData_barrel,
+		0,
+		0,
+		0
+	);
+	//update dir_buffer
+	context->UpdateSubresource1(
+		m_DirBuffer_barrel.Get(),
+		0,
+		NULL,
+		&m_dirLight_barrel,
+		0,
+		0,
+		0
+	);
+	//update point_buffer
+	context->UpdateSubresource1(
+		m_PointBuffer_barrel.Get(),
+		0,
+		NULL,
+		&m_pointLight_barrel,
+		0,
+		0,
+		0
+	);
+	////update spot_buffer
+	context->UpdateSubresource1(
+		m_SpotBuffer_barrel.Get(),
+		0,
+		NULL,
+		&m_spotLight_barrel,
+		0,
+		0,
+		0
+	);
+	stride = sizeof(VertexPositionUVNORMAL);
+	context->IASetVertexBuffers(
+		0,
+		1,
+		m_vertexBuffer_barrel.GetAddressOf(),
+		&stride,
+		&offset
+	);
+
+	context->IASetIndexBuffer(
+		m_indexBuffer_barrel.Get(),
+		DXGI_FORMAT_R32_UINT,
+		0
+	);
+
+	context->IASetInputLayout(m_inputLayout_objModel.Get()); //Thats fine using same layout
+
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	context->VSSetShader(
+		m_vertexShader_objModel.Get(),
+		nullptr,
+		0
+	); //Thats fine using same shader
+
+	context->PSSetShader(
+		m_pixelShader_objModel.Get(),
+		nullptr,
+		0
+	); //Thats fine using same shader
+
+	context->VSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_barrel.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_barrel.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	//Set lighting buffers
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_DirBuffer_barrel.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		1,
+		1,
+		m_PointBuffer_barrel.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		2,
+		1,
+		m_SpotBuffer_barrel.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetShaderResources(0, 1, barrelView.GetAddressOf());
+	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf()); //thats fine using same sampler
+
+	context->DrawIndexed(
+		m_indexCount_barrel,
+		0,
+		0
+	);
+	///
+}
+
+void Sample3DSceneRenderer::DrawWall()
+{
+	//Draw wall//
+	auto context = m_deviceResources->GetD3DDeviceContext();
+	UINT stride = 0;
+	UINT offset = 0;
+	//update dir_buffer
+	context->UpdateSubresource1(
+		m_DirBuffer_wall.Get(),
+		0,
+		NULL,
+		&m_dirLight_wall,
+		0,
+		0,
+		0
+	);
+	//update point_buffer
+	context->UpdateSubresource1(
+		m_PointBuffer_wall.Get(),
+		0,
+		NULL,
+		&m_pointLight_wall,
+		0,
+		0,
+		0
+	);
+	//update spot_buffer
+	context->UpdateSubresource1(
+		m_SpotBuffer_wall.Get(),
+		0,
+		NULL,
+		&m_spotLight_wall,
+		0,
+		0,
+		0
+	);
+	context->UpdateSubresource1(
+		m_constantInstanceBuffer_wall.Get(),
+		0,
+		NULL,
+		&m_instancing_wall,
+		0,
+		0,
+		0
+	);
+	stride = sizeof(VertexPositionUVNORMAL);
+	context->IASetVertexBuffers(
+		0,
+		1,
+		m_vertexBuffer_wall.GetAddressOf(),
+		&stride,
+		&offset
+	);
+
+	context->IASetIndexBuffer(
+		m_indexBuffer_wall.Get(),
+		DXGI_FORMAT_R32_UINT,
+		0
+	);
+
+	context->IASetInputLayout(m_inputLayout_objModel.Get()); //Thats fine using same layout
+
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	
+	context->VSSetShader(
+		m_vertexShader_wall.Get(),
+		nullptr,
+		0
+	); //Thats fine using same shader as floor for instancing
+	context->PSSetShader(
+		m_pixelShader_objModel.Get(),
+		nullptr,
+		0
+	); //Thats fine using same shader
+
+	context->VSSetConstantBuffers1(
+		1,
+		1,
+		m_constantInstanceBuffer_wall.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_wall.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	//Set lighting buffers
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_DirBuffer_wall.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		1,
+		1,
+		m_PointBuffer_wall.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		2,
+		1,
+		m_SpotBuffer_wall.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetShaderResources(0, 1, wallView.GetAddressOf());
+	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf()); //thats fine using same sampler
+
+	context->DrawIndexedInstanced(
+		m_indexCount_wall,
+		64,
+		0,
+		0,
+		0
+	);
+}
+
+void Sample3DSceneRenderer::DrawFloor()
+{
+	//Draw floor//
+	auto context = m_deviceResources->GetD3DDeviceContext();
+	UINT stride = 0;
+	UINT offset = 0;
+
+	//update dir_buffer
+	context->UpdateSubresource1(
+		m_DirBuffer_floor.Get(),
+		0,
+		NULL,
+		&m_dirLight_floor,
+		0,
+		0,
+		0
+	);
+	//update point_buffer
+	context->UpdateSubresource1(
+		m_PointBuffer_floor.Get(),
+		0,
+		NULL,
+		&m_pointLight_floor,
+		0,
+		0,
+		0
+	);
+	//update spot_buffer
+	context->UpdateSubresource1(
+		m_SpotBuffer_floor.Get(),
+		0,
+		NULL,
+		&m_spotLight_floor,
+		0,
+		0,
+		0
+	);
+	//update instancing buffer
+	context->UpdateSubresource1(
+		m_constantInstanceBuffer_floor.Get(),
+		0,
+		NULL,
+		&m_instancing_floor,
+		0,
+		0,
+		0
+	);
+
+	stride = sizeof(VertexPositionUVNORMAL);
+	context->IASetVertexBuffers(
+		0,
+		1,
+		m_vertexBuffer_floor.GetAddressOf(),
+		&stride,
+		&offset
+	);
+
+	context->IASetIndexBuffer(
+		m_indexBuffer_floor.Get(),
+		DXGI_FORMAT_R32_UINT,
+		0
+	);
+
+	context->IASetInputLayout(m_inputLayout_objModel.Get()); //Thats fine using same layout
+
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	context->VSSetShader(
+		m_vertexShader_floor.Get(),
+		nullptr,
+		0
+	);
+
+	context->PSSetShader(
+		m_pixelShader_objModel.Get(),
+		nullptr,
+		0
+	); //Thats fine using same shader
+
+	   //Set Instance cBuffer
+	context->VSSetConstantBuffers1(
+		1,
+		1,
+		m_constantInstanceBuffer_floor.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
+	//Set lighting buffers
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_DirBuffer_floor.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		1,
+		1,
+		m_PointBuffer_floor.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		2,
+		1,
+		m_SpotBuffer_floor.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
+
+	context->PSSetShaderResources(0, 1, floorView.GetAddressOf());
+	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf()); //thats fine using same sampler
+
+	context->DrawIndexedInstanced(
+		m_indexCount_floor,
+		64,
+		0,
+		0,
+		0
+	);
+
+	///
+}
+
+void Sample3DSceneRenderer::DrawDrone()
+{
+	auto context = m_deviceResources->GetD3DDeviceContext();
+	UINT stride = 0;
+	UINT offset = 0;
+	//Draw drone//
+	context->UpdateSubresource1(
+		m_constantBuffer_drone.Get(),
+		0,
+		NULL,
+		&m_constantBufferData_drone,
+		0,
+		0,
+		0
+	);
+	//update dir_buffer
+	context->UpdateSubresource1(
+		m_DirBuffer_drone.Get(),
+		0,
+		NULL,
+		&m_dirLight_drone,
+		0,
+		0,
+		0
+	);
+	//update point_buffer
+	context->UpdateSubresource1(
+		m_PointBuffer_drone.Get(),
+		0,
+		NULL,
+		&m_pointLight_drone,
+		0,
+		0,
+		0
+	);
+	////update spot_buffer
+	context->UpdateSubresource1(
+		m_SpotBuffer_drone.Get(),
+		0,
+		NULL,
+		&m_spotLight_drone,
+		0,
+		0,
+		0
+	);
+	stride = sizeof(VertexPositionUVNORMAL);
+	context->IASetVertexBuffers(
+		0,
+		1,
+		m_vertexBuffer_drone.GetAddressOf(),
+		&stride,
+		&offset
+	);
+
+	context->IASetIndexBuffer(
+		m_indexBuffer_drone.Get(),
+		DXGI_FORMAT_R32_UINT,
+		0
+	);
+
+	context->IASetInputLayout(m_inputLayout_objModel.Get()); //Thats fine using same layout
+
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	context->VSSetShader(
+		m_vertexShader_objModel.Get(),
+		nullptr,
+		0
+	); //Thats fine using same shader
+
+	context->PSSetShader(
+		m_pixelShader_objModel.Get(),
+		nullptr,
+		0
+	); //Thats fine using same shader
+
+	context->VSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_drone.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_drone.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	//Set lighting buffers
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_DirBuffer_drone.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		1,
+		1,
+		m_PointBuffer_drone.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		2,
+		1,
+		m_SpotBuffer_drone.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetShaderResources(0, 1, droneView.GetAddressOf());
+	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf()); //thats fine using same sampler
+
+	context->DrawIndexed(
+		m_indexCount_drone,
+		0,
+		0
+	);
+	///
+}
+
+void Sample3DSceneRenderer::DrawAlien()
+{
+	auto context = m_deviceResources->GetD3DDeviceContext();
+	UINT stride = 0;
+	UINT offset = 0;
+	//Draw Alien//
+	context->UpdateSubresource1(
+		m_constantBuffer_alien.Get(),
+		0,
+		NULL,
+		&m_constantBufferData_alien,
+		0,
+		0,
+		0
+	);
+	//update dir_buffer
+	context->UpdateSubresource1(
+		m_DirBuffer_alien.Get(),
+		0,
+		NULL,
+		&m_dirLight_alien,
+		0,
+		0,
+		0
+	);
+	//update point_buffer
+	context->UpdateSubresource1(
+		m_PointBuffer_alien.Get(),
+		0,
+		NULL,
+		&m_pointLight_alien,
+		0,
+		0,
+		0
+	);
+	////update spot_buffer
+	context->UpdateSubresource1(
+		m_SpotBuffer_alien.Get(),
+		0,
+		NULL,
+		&m_spotLight_alien,
+		0,
+		0,
+		0
+	);
+	stride = sizeof(VertexPositionUVNORMAL);
+	context->IASetVertexBuffers(
+		0,
+		1,
+		m_vertexBuffer_alien.GetAddressOf(),
+		&stride,
+		&offset
+	);
+
+	context->IASetIndexBuffer(
+		m_indexBuffer_alien.Get(),
+		DXGI_FORMAT_R32_UINT,
+		0
+	);
+
+	context->IASetInputLayout(m_inputLayout_objModel.Get()); //Thats fine using same layout
+
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	context->VSSetShader(
+		m_vertexShader_objModel.Get(),
+		nullptr,
+		0
+	); //Thats fine using same shader
+
+	context->PSSetShader(
+		m_pixelShader_objModel.Get(),
+		nullptr,
+		0
+	); //Thats fine using same shader
+
+	context->VSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_alien.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_alien.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	//Set lighting buffers
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_DirBuffer_alien.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		1,
+		1,
+		m_PointBuffer_alien.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		2,
+		1,
+		m_SpotBuffer_alien.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetShaderResources(0, 1, alienView.GetAddressOf());
+	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf()); //thats fine using same sampler
+
+	context->DrawIndexed(
+		m_indexCount_alien,
+		0,
+		0
+	);
+}
+
+void Sample3DSceneRenderer::DrawTv()
+{
+	auto context = m_deviceResources->GetD3DDeviceContext();
+	UINT stride = 0;
+	UINT offset = 0;
+	//Draw TV//
+	context->UpdateSubresource1(
+		m_constantBuffer_tv.Get(),
+		0,
+		NULL,
+		&m_constantBufferData_tv,
+		0,
+		0,
+		0
+	);
+	//update dir_buffer
+	context->UpdateSubresource1(
+		m_DirBuffer_tv.Get(),
+		0,
+		NULL,
+		&m_dirLight_tv,
+		0,
+		0,
+		0
+	);
+
+	stride = sizeof(VertexPositionUVNORMAL);
+	context->IASetVertexBuffers(
+		0,
+		1,
+		m_vertexBuffer_tv.GetAddressOf(),
+		&stride,
+		&offset
+	);
+
+	context->IASetIndexBuffer(
+		m_indexBuffer_tv.Get(),
+		DXGI_FORMAT_R32_UINT, // Each index is one 16-bit unsigned integer (short).
+		0
+	);
+
+	context->IASetInputLayout(m_inputLayout_objModel.Get());
+
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	context->VSSetShader(
+		m_vertexShader_objModel.Get(),
+		nullptr,
+		0
+	);
+
+	context->PSSetShader(
+		m_pixelShader_objModel.Get(),
+		nullptr,
+		0
+	);
+
+	context->VSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_tv.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_tv.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	//Set lighting buffers
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_DirBuffer_tv.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
+	context->PSSetShaderResources(0, 1, Render2TextureSRV.GetAddressOf());
+	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf());
+
+	context->DrawIndexed(
+		m_indexCount_tv,
+		0,
+		0
+	);
+
+	ID3D11ShaderResourceView* pNull = nullptr;
+	context->PSSetShaderResources(0, 1, &pNull);
+	
+
+
+	///
 }
