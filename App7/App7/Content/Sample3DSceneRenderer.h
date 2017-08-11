@@ -55,6 +55,8 @@ namespace App7
 
 		void DrawTv();
 
+		void ResetObjectsBack2Camera1();
+
 		///
 
 

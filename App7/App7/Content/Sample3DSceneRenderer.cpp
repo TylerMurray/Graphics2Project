@@ -247,7 +247,9 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 		////Alien////
 		m_constantBufferData_alien = m_constantBufferData;
 		XMStoreFloat4x4(&m_constantBufferData_alien.model, XMMatrixTranspose(XMMatrixTranslation(-8.5f, -4.0f, 1.0f)*XMMatrixRotationY(3.14159f)* XMMatrixScaling(0.9f, 0.9f, 0.9f)));
-		XMStoreFloat4(&m_dirLight_alien.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 0.1f });
+		//XMStoreFloat4x4(&m_constantBufferData_alien.model, XMMatrixTranspose(XMMatrixTranslation(-1.0f, -4.0f, -5.0f)*XMMatrixRotationY(-1.5708f)* XMMatrixScaling(0.9f, 0.9f, 0.9f)));
+
+		XMStoreFloat4(&m_dirLight_alien.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 0.0f });
 		XMStoreFloat4(&m_dirLight_alien.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
 
 		XMStoreFloat4(&m_pointLight_alien.point_position, XMVECTOR{ 9.0f, 0.75f, -0.25f, 0.1f });
@@ -416,6 +418,7 @@ void Sample3DSceneRenderer::Render()
 	context->OMSetRenderTargets(1, targets, m_deviceResources->GetDepthStencilView());
 	context->ClearRenderTargetView(m_deviceResources->GetBackBufferRenderTargetView(), DirectX::Colors::CornflowerBlue);
 	context->ClearDepthStencilView(m_deviceResources->GetDepthStencilView(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
+	ResetObjectsBack2Camera1();
 
 	// Prepare the constant buffer to send it to the graphics device.
 	context->UpdateSubresource1(
@@ -1538,6 +1541,68 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 			);
 		}
 
+		//Render to texture
+
+		//Setting up Screen Texture
+		Size outputSize = m_deviceResources->GetOutputSize();
+		D3D11_TEXTURE2D_DESC texDesc;
+		ZeroMemory(&texDesc, sizeof(texDesc));
+		texDesc.Width = outputSize.Width;
+		texDesc.Height = outputSize.Height;
+		texDesc.MipLevels = 1;
+		texDesc.ArraySize = 1;
+		texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+		texDesc.Usage = D3D11_USAGE_DEFAULT;
+		texDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
+		texDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
+		texDesc.SampleDesc.Count = 1;
+
+		m_deviceResources->GetD3DDevice()->CreateTexture2D(&texDesc, NULL, &Render2Texture_Screen);
+
+		//Setting up Depth Texture
+		D3D11_TEXTURE2D_DESC texDesc2;
+		ZeroMemory(&texDesc2, sizeof(texDesc2));
+		texDesc2.Width = outputSize.Width;
+		texDesc2.Height = outputSize.Height;
+		texDesc2.MipLevels = 1;
+		texDesc2.ArraySize = 1;
+		texDesc2.Format = DXGI_FORMAT_D16_UNORM;
+		texDesc2.Usage = D3D11_USAGE_DEFAULT;
+		texDesc2.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+		texDesc2.SampleDesc.Count = 1;
+
+
+		m_deviceResources->GetD3DDevice()->CreateTexture2D(&texDesc2, NULL, &Render2Texture_Depth);
+
+		//Render2TextureRTV;
+		D3D11_RENDER_TARGET_VIEW_DESC RTV_desc;
+		ZeroMemory(&RTV_desc, sizeof(RTV_desc));
+		RTV_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+		RTV_desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
+		RTV_desc.Texture2D.MipSlice = 0;
+
+		m_deviceResources->GetD3DDevice()->CreateRenderTargetView(Render2Texture_Screen.Get(), &RTV_desc, &Render2TextureRTV);
+
+		//Render2TextureSRV;
+		D3D11_SHADER_RESOURCE_VIEW_DESC SRV_desc;
+		ZeroMemory(&SRV_desc, sizeof(SRV_desc));
+		SRV_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
+		SRV_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+		SRV_desc.Texture2D.MostDetailedMip = 0;
+		SRV_desc.Texture2D.MipLevels = 1;
+
+		m_deviceResources->GetD3DDevice()->CreateShaderResourceView(Render2Texture_Screen.Get(), &SRV_desc, &Render2TextureSRV);
+
+		//Render2TextureDSV;
+		D3D11_DEPTH_STENCIL_VIEW_DESC DSV_desc;
+		ZeroMemory(&DSV_desc, sizeof(DSV_desc));
+		DSV_desc.Format = DXGI_FORMAT_D16_UNORM;
+		DSV_desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
+		DSV_desc.Texture2D.MipSlice = 0;
+
+		m_deviceResources->GetD3DDevice()->CreateDepthStencilView(Render2Texture_Depth.Get(), &DSV_desc, &Render2TextureDSV);
+
+
 		
 }
 
@@ -1903,103 +1968,77 @@ bool Sample3DSceneRenderer::LoadSkyBox(const char* path, std::vector <VertexPosi
 
 void Sample3DSceneRenderer::RenderToTexture()
 {
-	//Setting up Screen Texture
-	Size outputSize = m_deviceResources->GetOutputSize();
-	D3D11_TEXTURE2D_DESC texDesc;
-	ZeroMemory(&texDesc, sizeof(texDesc));
-	texDesc.Width = outputSize.Width;
-	texDesc.Height = outputSize.Height;
-	texDesc.MipLevels = 1;
-	texDesc.ArraySize = 1;
-	texDesc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-	texDesc.Usage = D3D11_USAGE_DEFAULT;
-	texDesc.BindFlags = D3D11_BIND_RENDER_TARGET | D3D11_BIND_SHADER_RESOURCE;
-	texDesc.MiscFlags = D3D11_RESOURCE_MISC_GENERATE_MIPS;
-	texDesc.SampleDesc.Count = 1;
-
-	m_deviceResources->GetD3DDevice()->CreateTexture2D(&texDesc, NULL, &Render2Texture_Screen);
-
-	//Setting up Depth Texture
-	D3D11_TEXTURE2D_DESC texDesc2;
-	ZeroMemory(&texDesc2, sizeof(texDesc2));
-	texDesc2.Width = outputSize.Width;
-	texDesc2.Height = outputSize.Height;
-	texDesc2.MipLevels = 1;
-	texDesc2.ArraySize = 1;
-	texDesc2.Format = DXGI_FORMAT_D16_UNORM;
-	texDesc2.Usage = D3D11_USAGE_DEFAULT;
-	texDesc2.BindFlags = D3D11_BIND_DEPTH_STENCIL;
-	texDesc2.SampleDesc.Count = 1;
-	
-
-	m_deviceResources->GetD3DDevice()->CreateTexture2D(&texDesc2, NULL, &Render2Texture_Depth);
-
-	//Render2TextureRTV;
-	D3D11_RENDER_TARGET_VIEW_DESC RTV_desc;
-	ZeroMemory(&RTV_desc, sizeof(RTV_desc));
-	RTV_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-	RTV_desc.ViewDimension = D3D11_RTV_DIMENSION_TEXTURE2D;
-	RTV_desc.Texture2D.MipSlice = 0;
-
-	m_deviceResources->GetD3DDevice()->CreateRenderTargetView(Render2Texture_Screen.Get(), &RTV_desc, &Render2TextureRTV);
-
-	//Render2TextureSRV;
-	D3D11_SHADER_RESOURCE_VIEW_DESC SRV_desc;
-	ZeroMemory(&SRV_desc, sizeof(SRV_desc));
-	SRV_desc.Format = DXGI_FORMAT_R8G8B8A8_UNORM_SRGB;
-	SRV_desc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-	SRV_desc.Texture2D.MostDetailedMip = 0;
-	SRV_desc.Texture2D.MipLevels = 1;
-
-	m_deviceResources->GetD3DDevice()->CreateShaderResourceView(Render2Texture_Screen.Get(), &SRV_desc, &Render2TextureSRV);
-
-	//Render2TextureDSV;
-	D3D11_DEPTH_STENCIL_VIEW_DESC DSV_desc;
-	ZeroMemory(&DSV_desc, sizeof(DSV_desc));
-	DSV_desc.Format = DXGI_FORMAT_D16_UNORM;
-	DSV_desc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
-	DSV_desc.Texture2D.MipSlice = 0;
-
-	m_deviceResources->GetD3DDevice()->CreateDepthStencilView(Render2Texture_Depth.Get(), &DSV_desc, &Render2TextureDSV);
-
 
 	//BEFORE RENDERING
 	m_deviceResources->GetD3DDeviceContext()->OMSetRenderTargets(1, Render2TextureRTV.GetAddressOf(), Render2TextureDSV.Get());
 	m_deviceResources->GetD3DDeviceContext()->ClearRenderTargetView(Render2TextureRTV.Get(), DirectX::Colors::CornflowerBlue);
 	m_deviceResources->GetD3DDeviceContext()->ClearDepthStencilView(Render2TextureDSV.Get(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 
-	////Update World,View,Projection
-	//world2 = world;
-	////camera2 = camera;
-	//proj2 = proj;
+	//Update World,View,Projection
+	world2 = world;
+	//camera2 = camera;
+	proj2 = proj;
+	//Rotations
+	//3.14159 = 180 degrees
+	//1.5708 = 90 degrees
 
- //   XMStoreFloat4x4(&camera2, XMMatrixIdentity());
-	//XMMATRIX cameraTmp = XMLoadFloat4x4(&camera2);
-	//cameraTmp = XMMatrixTranspose(cameraTmp * XMMatrixTranslation(-50.0f, 0.0f, 0.0f) * XMMatrixRotationY(3.14159f));
-	//XMVECTOR camPos2 = cameraTmp.r[3];
-	//XMStoreFloat4x4(&camera2, cameraTmp);
+    XMStoreFloat4x4(&camera2, XMMatrixIdentity());
+	XMMATRIX cameraTmp = XMLoadFloat4x4(&camera2);
+	cameraTmp = XMMatrixTranspose(cameraTmp * XMMatrixTranslation(-0.3f, 0.0f, 0.3f) * XMMatrixRotationY(-1.5f));
+	XMVECTOR camPos2 = cameraTmp.r[3];
+	XMStoreFloat4x4(&camera2, cameraTmp);
 
-	//XMMATRIX projTmp = XMLoadFloat4x4(&proj2);
-	//float AspectRatio = 2.5f / 1.5f;
-	//projTmp = XMMatrixPerspectiveFovLH(1.0f, AspectRatio, 0.0f, 1.0f);
-	////projTmp = XMMatrixPerspectiveLH()
-	//XMStoreFloat4x4(&proj2, projTmp);
-	//try 90*
-	//////Alien////
+	XMMATRIX projTmp = XMLoadFloat4x4(&proj2);
+	float AspectRatio = 2.5f / 1.5f;
+	projTmp = XMMatrixPerspectiveFovLH(1.5708f, AspectRatio, 0.01f, 100.0f);
+	XMStoreFloat4x4(&proj2, projTmp);
 	
-	//XMStoreFloat4x4(&m_constantBufferData_alien.model, XMMatrixTranspose(XMMatrixTranslation(-8.5f, -4.0f, 1.0f)*XMMatrixRotationY(3.14159f)* XMMatrixScaling(0.9f, 0.9f, 0.9f)));
-	//XMStoreFloat4x4(&m_constantBufferData_alien.view, XMMatrixTranspose(XMMatrixInverse(0, cameraTmp)));
+	//Alien
+	XMStoreFloat4x4(&m_constantBufferData_alien.model, XMMatrixTranspose(XMMatrixTranslation(-0.25f, -5.15f, -1.25f)*XMMatrixRotationY(-2.5708f)* XMMatrixScaling(0.9f, 0.9f, 0.9f)));
+	XMStoreFloat4x4(&m_constantBufferData_alien.view, XMMatrixTranspose(XMMatrixInverse(0, cameraTmp)));
+	XMStoreFloat4x4(&m_constantBufferData_alien.projection, XMMatrixTranspose(projTmp));
 
+	if (LightON == true)
+	{
+		XMStoreFloat4(&m_dirLight_alien.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 0.1f });
 
-	////Skybox////
+	}
+	else
+	{
+		XMStoreFloat4(&m_dirLight_alien.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 0.0f });
+	}
 	
-	//XMStoreFloat4x4(&m_constantBufferData_sky.model, XMMatrixTranspose(XMMatrixScaling(100.0f, 100.0f, 100.0f)*XMMatrixTranslation(XMVectorGetX(camPos2), XMVectorGetY(camPos2), XMVectorGetZ(camPos2))));
-	//XMStoreFloat4x4(&m_constantBufferData_sky.view, XMMatrixTranspose(XMMatrixInverse(0, cameraTmp)));
 
-	////Station////
-	
-	/*XMStoreFloat4x4(&m_constantBufferData_station.model, XMMatrixTranspose(XMMatrixScaling(100.0f, 100.0f, 100.0f)*XMMatrixTranslation(7.0f, 8.0f, -10.0f)));
-	XMStoreFloat4x4(&m_constantBufferData_station.view, XMMatrixTranspose(XMMatrixInverse(0, cameraTmp)));*/
+	//Vending Machine
+	m_constantBufferData_objModel.view = m_constantBufferData_alien.view;
+	m_constantBufferData_objModel.projection = m_constantBufferData_alien.projection;
+
+	//Barrel
+	m_constantBufferData_barrel.view = m_constantBufferData_alien.view;
+	m_constantBufferData_barrel.projection = m_constantBufferData_alien.projection;
+
+	//wall
+	m_constantBufferData_wall.view = m_constantBufferData_alien.view;
+	m_constantBufferData_wall.projection = m_constantBufferData_alien.projection;
+
+	//floor
+	m_constantBufferData_floor.view = m_constantBufferData_alien.view;
+	m_constantBufferData_floor.projection = m_constantBufferData_alien.projection;
+
+	//drone
+	m_constantBufferData_drone.view = m_constantBufferData_alien.view;
+	m_constantBufferData_drone.projection = m_constantBufferData_alien.projection;
+
+	//Skybox
+	XMStoreFloat4x4(&m_constantBufferData_sky.model, XMMatrixTranspose(XMMatrixScaling(100.0f, 100.0f, 100.0f)*XMMatrixTranslation(XMVectorGetX(camPos2), XMVectorGetY(camPos2), XMVectorGetZ(camPos2))));
+	m_constantBufferData_sky.view = m_constantBufferData_alien.view;
+	m_constantBufferData_sky.projection = m_constantBufferData_alien.projection;
+
+
+	//Station
+	m_constantBufferData_station.view = m_constantBufferData_alien.view;
+	m_constantBufferData_station.projection = m_constantBufferData_alien.projection;
+
 
 
 	//RENDERING
@@ -2012,9 +2051,6 @@ void Sample3DSceneRenderer::RenderToTexture()
 	DrawStation();
 	DrawAlien();
 
-	//AFTER RENDERING
-	//m_deviceResources->GetD3DDeviceContext()->GenerateMips(Render2TextureSRV.Get());
-	///
 }
 
 
@@ -3160,4 +3196,48 @@ void Sample3DSceneRenderer::DrawTv()
 
 
 	///
+}
+
+void Sample3DSceneRenderer::ResetObjectsBack2Camera1()
+{
+	XMMATRIX newcamera = XMLoadFloat4x4(&camera);
+	XMVECTOR camPos = newcamera.r[3];
+
+
+	//VendingMachine
+	m_constantBufferData_objModel.view = m_constantBufferData.view;
+	m_constantBufferData_objModel.projection = m_constantBufferData.projection;
+
+	//barrel
+	m_constantBufferData_barrel.view = m_constantBufferData.view;
+	m_constantBufferData_barrel.projection = m_constantBufferData.projection;
+
+	//wall
+	m_constantBufferData_wall.view = m_constantBufferData.view;
+	m_constantBufferData_wall.projection = m_constantBufferData.projection;
+
+	//floor
+	m_constantBufferData_floor.view = m_constantBufferData.view;
+	m_constantBufferData_floor.projection = m_constantBufferData.projection;
+
+	//drone
+	m_constantBufferData_drone.view = m_constantBufferData.view;
+	m_constantBufferData_drone.projection = m_constantBufferData.projection;
+
+	//alien
+	XMStoreFloat4x4(&m_constantBufferData_alien.model, XMMatrixTranspose(XMMatrixTranslation(-8.5f, -4.0f, 1.0f)*XMMatrixRotationY(3.14159f)* XMMatrixScaling(0.9f, 0.9f, 0.9f)));
+	m_constantBufferData_alien.view = m_constantBufferData.view;
+	m_constantBufferData_alien.projection = m_constantBufferData.projection;
+	XMStoreFloat4(&m_dirLight_alien.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 0.0f });
+
+
+	//skybox
+	XMStoreFloat4x4(&m_constantBufferData_sky.model, XMMatrixTranspose(XMMatrixScaling(100.0f, 100.0f, 100.0f)*XMMatrixTranslation(XMVectorGetX(camPos), XMVectorGetY(camPos), XMVectorGetZ(camPos))));
+	m_constantBufferData_sky.view = m_constantBufferData.view;
+	m_constantBufferData_sky.projection = m_constantBufferData.projection;
+
+	//station
+	m_constantBufferData_station.view = m_constantBufferData.view;
+	m_constantBufferData_station.projection = m_constantBufferData.projection;
+
 }
