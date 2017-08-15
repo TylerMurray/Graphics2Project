@@ -91,6 +91,8 @@ extern bool w_down;
 extern bool a_down;
 extern bool s_down;
 extern bool d_down;
+extern bool f_down;
+extern bool g_down;
 extern bool left_click;
 
 extern char buttons[256];
@@ -132,7 +134,7 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 		newcamera.r[3] = newcamera.r[3] + newcamera.r[0] * timer.GetElapsedSeconds() * 5.0;
 	}
 
-	Windows::UI::Input::PointerPoint^ point = nullptr;
+	//Windows::UI::Input::PointerPoint^ point = nullptr;
 
 	//if(mouse_move)/*This crashes unless a mouse event actually happened*/
 	//point = Windows::UI::Input::PointerPoint::GetCurrentPoint(pointerID);
@@ -166,7 +168,19 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 	
 	//SpotLight
 	lightTime += timer.GetElapsedSeconds();
-	if (LightON == true)
+	//Windows::UI::Core::CoreVirtualKeyStates F_down = gwindow->GetAsyncKeyState(Windows::System::VirtualKey::F);
+
+	if (f_down)
+	{
+		ToggleLight = false;
+	}
+
+	if (g_down)
+	{
+		ToggleLight = true;
+	}
+
+	if (LightON == true && ToggleLight == true)
 	{
 		SpotLightConeRatio = 0.75f;
 	}
@@ -188,8 +202,20 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 	}
 
 		////Pyramid////	
+	XMMATRIX model = XMLoadFloat4x4(&m_constantBufferData.model);
+	XMMATRIX view = XMLoadFloat4x4(&m_constantBufferData.view);
+	XMMATRIX projection = XMLoadFloat4x4(&m_constantBufferData.projection);
+
 		m_constantBufferData_Pyramid = m_constantBufferData;
-		XMStoreFloat4x4(&m_constantBufferData_Pyramid.model, XMMatrixTranspose(XMMatrixTranslation(0.0f, -2.0f, 0.0f)*XMMatrixRotationX(3.14159f)));
+		XMStoreFloat4x4(&m_constantBufferData_Pyramid.model, XMMatrixTranspose(model));
+		XMStoreFloat4x4(&m_constantBufferData_Pyramid.view, XMMatrixTranspose(view));
+		XMStoreFloat4x4(&m_constantBufferData_Pyramid.projection, XMMatrixTranspose(projection));
+
+		XMStoreFloat4x4(&m_constantBufferData_Pyramid.model, XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.0f, 1.5f)));
+
+		////Pyramid2////	
+		m_constantBufferData_Pyramid2 = m_constantBufferData_Pyramid;
+		XMStoreFloat4x4(&m_constantBufferData_Pyramid2.model, XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.0f, 3.5f)));
 
 		////wall////																																			 
 		m_constantBufferData_wall = m_constantBufferData;
@@ -205,15 +231,20 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 		XMStoreFloat4(&m_spotLight_wall.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
 		XMStoreFloat4(&m_spotLight_wall.spot_coneRatio, XMVECTOR{ SpotLightConeRatio, 0.0f, 0.0f, 0.0f });
 
-		//Instancing
+		//wall Instancing
 		XMStoreFloat4x4(&m_instancing_wall.world[0], XMMatrixTranspose(XMMatrixTranslation(-2.75f, 0.0f, 0.0f)*XMMatrixRotationY(3.14159f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
 		XMStoreFloat4x4(&m_instancing_wall.world[8], XMMatrixTranspose(XMMatrixTranslation(-1.0f, 0.0f, 1.75f)*XMMatrixRotationY(1.5708f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
 		XMStoreFloat4x4(&m_instancing_wall.world[9], XMMatrixTranspose(XMMatrixTranslation(-1.0f, 0.0f, 0.75f)*XMMatrixRotationY(1.5708f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
 
-		XMStoreFloat4x4(&m_instancing_wall.world[10], XMMatrixTranspose(XMMatrixTranslation(-2.5f, 0.0f, -0.75f)*XMMatrixRotationY(-1.5708f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
-		XMStoreFloat4x4(&m_instancing_wall.world[11], XMMatrixTranspose(XMMatrixTranslation(-2.5f, 0.0f, -1.75f)*XMMatrixRotationY(-1.5708f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
+		//wall next to door (alien room)
+		XMStoreFloat4x4(&m_instancing_wall.world[10], XMMatrixTranspose(XMMatrixTranslation(-2.5f, 0.0f, -1.75f)*XMMatrixRotationY(-1.5708f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
 
-		//XMStoreFloat4x4(&m_instancing_wall.world[12], XMMatrixTranspose(XMMatrixTranslation(-0.9f, -1.0f, 0.0f)*XMMatrixRotationZ(1.5708f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
+		//wall at the end of camera room
+		XMStoreFloat4x4(&m_instancing_wall.world[11], XMMatrixTranspose(XMMatrixTranslation(-3.75f, 0.0f, -0.75f)*XMMatrixRotationY(-1.5708f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
+		XMStoreFloat4x4(&m_instancing_wall.world[12], XMMatrixTranspose(XMMatrixTranslation(-3.75f, 0.0f, -1.75f)*XMMatrixRotationY(-1.5708f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
+
+		//wall next to door (camera room)
+		XMStoreFloat4x4(&m_instancing_wall.world[13], XMMatrixTranspose(XMMatrixTranslation(1.5f, 0.0f, 1.75f)*XMMatrixRotationY(1.5708f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
 
 
 
@@ -228,6 +259,23 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 			XMStoreFloat4x4(&m_instancing_wall.world[i + 4], XMMatrixTranspose(XMMatrixTranslation(-0.25f, 0.0f, -1.0f*i)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
 		}
 
+		////door////																																			 
+		m_constantBufferData_door = m_constantBufferData;
+		XMStoreFloat4x4(&m_constantBufferData_door.model, XMMatrixTranspose(XMMatrixTranslation(-2.75f, 0.0f, 0.0f)*XMMatrixRotationY(3.14159f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
+		XMStoreFloat4(&m_dirLight_door.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 0.1f });
+		XMStoreFloat4(&m_dirLight_door.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+
+		XMStoreFloat4(&m_pointLight_door.point_position, XMVECTOR{ 2.0f, 1.0f + dirY_floor, -1.0f, 0.0f });
+		XMStoreFloat4(&m_pointLight_door.point_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+
+		XMStoreFloat4(&m_spotLight_door.spot_position, XMVECTOR{ XMVectorGetX(camPos), XMVectorGetY(camPos) - 0.5f, XMVectorGetZ(camPos), 1.0f });
+		XMStoreFloat4(&m_spotLight_door.spot_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+		XMStoreFloat4(&m_spotLight_door.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
+		XMStoreFloat4(&m_spotLight_door.spot_coneRatio, XMVECTOR{ SpotLightConeRatio, 0.0f, 0.0f, 0.0f });
+
+		//Door Instancing
+		XMStoreFloat4x4(&m_instancing_door.world[0], XMMatrixTranspose(XMMatrixTranslation(-2.5f, 0.0f, -0.75f)*XMMatrixRotationY(-1.5708f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
+		XMStoreFloat4x4(&m_instancing_door.world[1], XMMatrixTranspose(XMMatrixTranslation(1.5f, 0.0f, 0.75f)*XMMatrixRotationY(1.5708f)* XMMatrixScaling(5.0f, 7.0f, 5.0f)));
 
 		////VendingMachine////
 		m_constantBufferData_objModel = m_constantBufferData;
@@ -363,8 +411,13 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 		////Station////
 		m_constantBufferData_station = m_constantBufferData;
 		XMStoreFloat4x4(&m_constantBufferData_station.model, XMMatrixTranspose(XMMatrixScaling(100.0f, 100.0f, 100.0f)*XMMatrixTranslation(7.0f, 8.0f, -10.0f)));
-		XMStoreFloat4(&m_dirLight_station.dir_direction, XMVECTOR{ 0.0f, 0.0f, 0.0f, 0.0f });
+		XMStoreFloat4(&m_dirLight_station.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 1.0f });
 		XMStoreFloat4(&m_dirLight_station.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+
+		XMStoreFloat4(&m_spotLight_station.spot_position, XMVECTOR{ XMVectorGetX(camPos), XMVectorGetY(camPos) - 0.5f, XMVectorGetZ(camPos), 1.0f });
+		XMStoreFloat4(&m_spotLight_station.spot_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+		XMStoreFloat4(&m_spotLight_station.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
+		XMStoreFloat4(&m_spotLight_station.spot_coneRatio, XMVECTOR{ SpotLightConeRatio, 0.0f, 0.0f, 0.0f });
 
 		//TV//
 		m_constantBufferData_tv = m_constantBufferData;
@@ -420,71 +473,27 @@ void Sample3DSceneRenderer::Render()
 	context->ClearDepthStencilView(m_deviceResources->GetDepthStencilView(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	ResetObjectsBack2Camera1();
 
-	// Prepare the constant buffer to send it to the graphics device.
-	context->UpdateSubresource1(
-		m_constantBuffer.Get(),
-		0,
-		NULL,
-		&m_constantBufferData,
-		0,
-		0,
-		0
-		);
-
-	// Each vertex is one instance of the VertexPositionColor struct.
-	UINT stride = sizeof(VertexPositionColor);
-	UINT offset = 0;
-	context->IASetVertexBuffers(
-		0,
-		1,
-		m_vertexBuffer.GetAddressOf(),
-		&stride,
-		&offset
-		);
-
-	context->IASetIndexBuffer(
-		m_indexBuffer.Get(),
-		DXGI_FORMAT_R16_UINT, // Each index is one 16-bit unsigned integer (short).
-		0
-		);
-
-	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
-
-	context->IASetInputLayout(m_inputLayout.Get());
-
-	// Attach our vertex shader.
-	context->VSSetShader(
-		m_vertexShader.Get(),
-		nullptr,
-		0
-		);
-
-	// Send the constant buffer to the graphics device.
-	context->VSSetConstantBuffers1(
-		0,
-		1,
-		m_constantBuffer.GetAddressOf(),
-		nullptr,
-		nullptr
-		);
-
-
-	// Attach our pixel shader.
-	context->PSSetShader(
-		m_pixelShader.Get(),
-		nullptr,
-		0
-		);
-
-	// Draw the objects.
-	context->DrawIndexed(
-		m_indexCount,
-		0,
-		0
-		);
+	float blendFactor[4] = { 0.5f, 0.5f, 0.5f, 0.5f };
+	unsigned int SampleMask = 0xffffffff;
+	context->OMSetBlendState(blendState.Get(), blendFactor, SampleMask);
 
 	//Draw My Objects
+
+
+	//SortTranparentObjectsAndDrawThem();
+
+	DrawCube();
 	DrawPyramid();
+	DrawPyramid2();
+
+	//DrawPyramid2();
+	//DrawPyramid();
+	//DrawCube();
+	
+	
+
+	ResetObjectsNonTranparent();
+
 	DrawVendingMachine();
 	DrawBarrel();
 	DrawWall();
@@ -494,11 +503,7 @@ void Sample3DSceneRenderer::Render()
 	DrawStation();
 	DrawAlien();
 	DrawTv();
-	
-	
-
-
-
+	DrawDoor();
 }
 
 void Sample3DSceneRenderer::CreateDeviceDependentResources()
@@ -639,6 +644,7 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 	/////////////////////////////PYRAMID//////////////////////////////
 
 	CD3D11_BUFFER_DESC constantBufferDesc_Pyramid(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+
 	m_deviceResources->GetD3DDevice()->CreateBuffer( &constantBufferDesc_Pyramid, nullptr, &m_constantBuffer_Pyramid);
 
 		// Load mesh vertices. Each vertex has a position and a color.
@@ -701,6 +707,75 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 				&indexBufferDesc_Pyramid,
 				&indexBufferData_Pyramid,
 				&m_indexBuffer_Pyramid
+			)
+		);
+
+		/////////////////////////////Pyramid2//////////////////////////////
+
+		CD3D11_BUFFER_DESC constantBufferDesc_Pyramid2(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+
+		m_deviceResources->GetD3DDevice()->CreateBuffer(&constantBufferDesc_Pyramid2, nullptr, &m_constantBuffer_Pyramid2);
+
+		// Load mesh vertices. Each vertex has a position and a color.
+		static const VertexPositionColor Pyramid2Vertices[] =
+		{
+			{ XMFLOAT3(-0.5f, -1.0f, 0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
+			{ XMFLOAT3(0.5f, -1.0f,  0.5f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
+			{ XMFLOAT3(-0.5f,  -1.0f, -0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
+			{ XMFLOAT3(0.5f,  -1.0f,  -0.5f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
+			{ XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT3(1.0f, 0.0f, 1.0f) }
+		};
+
+
+		D3D11_SUBRESOURCE_DATA vertexBufferData_Pyramid2 = { 0 };
+		vertexBufferData_Pyramid2.pSysMem = Pyramid2Vertices;
+		vertexBufferData_Pyramid2.SysMemPitch = 0;
+		vertexBufferData_Pyramid2.SysMemSlicePitch = 0;
+
+		CD3D11_BUFFER_DESC vertexBufferDesc_Pyramid2(sizeof(Pyramid2Vertices), D3D11_BIND_VERTEX_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&vertexBufferDesc_Pyramid2,
+				&vertexBufferData_Pyramid2,
+				&m_vertexBuffer_Pyramid2
+			)
+		);
+
+
+		static const unsigned short pyramid2Indices[] =
+		{
+			//bottom face
+			2,1,0,
+			1,2,3,
+
+			//left face
+			0,4,2,
+
+			//right face
+			1,3,4,
+
+			//front face
+			3,2,4,
+
+			//back face
+			0,1,4,
+
+		};
+
+		m_indexCount_Pyramid2 = ARRAYSIZE(pyramid2Indices);
+
+
+		D3D11_SUBRESOURCE_DATA indexBufferData_Pyramid2 = { 0 };
+		indexBufferData_Pyramid2.pSysMem = pyramid2Indices;
+		indexBufferData_Pyramid2.SysMemPitch = 0;
+		indexBufferData_Pyramid2.SysMemSlicePitch = 0;
+
+		CD3D11_BUFFER_DESC indexBufferDesc_Pyramid2(sizeof(pyramid2Indices), D3D11_BIND_INDEX_BUFFER);
+		DX::ThrowIfFailed(
+			m_deviceResources->GetD3DDevice()->CreateBuffer(
+				&indexBufferDesc_Pyramid2,
+				&indexBufferData_Pyramid2,
+				&m_indexBuffer_Pyramid2
 			)
 		);
 
@@ -1540,8 +1615,114 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 				)
 			);
 		}
+/////////////////////////////////////////End of TV//////////////////////////////////////
 
-		//Render to texture
+///////////////////////////////////////Start of door//////////////////////////////////
+		std::vector<VertexPositionUVNORMAL> doorVertices;
+		std::vector<unsigned int> doorIndices;
+
+		bool res10 = LoadOBJModel("Assets/wall.obj", doorVertices, doorIndices);
+
+		m_indexCount_door = doorIndices.size();
+
+
+		if (res10 == true)
+		{
+			// Load shaders asynchronously.
+			auto loadVSTask2 = DX::ReadDataAsync(L"VertexInstancingShader.cso");
+
+			// After the vertex shader file is loaded, create the shader and input layout.
+			auto createVSTask2 = loadVSTask2.then([this](const std::vector<byte>& fileData) {
+				DX::ThrowIfFailed(
+					m_deviceResources->GetD3DDevice()->CreateVertexShader(
+						&fileData[0],
+						fileData.size(),
+						nullptr,
+						&m_vertexShader_door
+					)
+				);
+			});
+
+			CD3D11_BUFFER_DESC constantBufferDesc_door(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&constantBufferDesc_door,
+					nullptr,
+					&m_constantBuffer_door
+				)
+			);
+			CD3D11_BUFFER_DESC DirBufferDesc_door(sizeof(dir_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&DirBufferDesc_door,
+					nullptr,
+					&m_DirBuffer_door
+				)
+			);
+			CD3D11_BUFFER_DESC PointBufferDesc_door(sizeof(point_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&PointBufferDesc_door,
+					nullptr,
+					&m_PointBuffer_door
+				)
+			);
+			CD3D11_BUFFER_DESC SpotBufferDesc_door(sizeof(spot_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&SpotBufferDesc_door,
+					nullptr,
+					&m_SpotBuffer_door
+				)
+			);
+			CD3D11_BUFFER_DESC InstancingBufferDesc_door(sizeof(Instancing), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&InstancingBufferDesc_door,
+					nullptr,
+					&m_constantInstanceBuffer_door
+				)
+			);
+
+
+			//Data setup//
+			D3D11_SUBRESOURCE_DATA vertexBufferData_door = { 0 };
+			vertexBufferData_door.pSysMem = doorVertices.data();
+			vertexBufferData_door.SysMemPitch = 0;
+			vertexBufferData_door.SysMemSlicePitch = 0;
+
+			CD3D11_BUFFER_DESC vertexBufferDesc_door(sizeof(VertexPositionUVNORMAL) * doorVertices.size(), D3D11_BIND_VERTEX_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&vertexBufferDesc_door,
+					&vertexBufferData_door,
+					&m_vertexBuffer_door
+				)
+			);
+
+			D3D11_SUBRESOURCE_DATA indexBufferData_door = { 0 };
+			indexBufferData_door.pSysMem = doorIndices.data();
+			indexBufferData_door.SysMemPitch = 0;
+			indexBufferData_door.SysMemSlicePitch = 0;
+
+			CD3D11_BUFFER_DESC indexBufferDesc_door(sizeof(unsigned int) * doorIndices.size(), D3D11_BIND_INDEX_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&indexBufferDesc_door,
+					&indexBufferData_door,
+					&m_indexBuffer_door
+				)
+			);
+		}
+
+		HRESULT result10 = CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(),
+			L"Assets\\door.dds",
+			((ComPtr<ID3D11Resource>)wallTexture).GetAddressOf(),
+			doorView.GetAddressOf());
+
+		/////////////////////////////////////////////End of door////////////////////////////////////
+
+////////////////////////////////Render to texture//////////////////////////////////////
 
 		//Setting up Screen Texture
 		Size outputSize = m_deviceResources->GetOutputSize();
@@ -1601,8 +1782,27 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 		DSV_desc.Texture2D.MipSlice = 0;
 
 		m_deviceResources->GetD3DDevice()->CreateDepthStencilView(Render2Texture_Depth.Get(), &DSV_desc, &Render2TextureDSV);
+		//////////////////////////////////End of Render 2 Texture/////////////////////////////////
 
+///////////////////////////////////////////Start of Transparent Objects////////////////////////////
 
+		D3D11_BLEND_DESC blendDesc;
+		ZeroMemory(&blendDesc, sizeof(blendDesc));
+		blendDesc.AlphaToCoverageEnable = true;
+		blendDesc.IndependentBlendEnable = false;
+		for (unsigned int i = 0; i < 8; i++)
+		{
+			blendDesc.RenderTarget[i].BlendEnable = true;
+			blendDesc.RenderTarget[i].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
+			blendDesc.RenderTarget[i].SrcBlend = D3D11_BLEND_SRC_COLOR;
+			blendDesc.RenderTarget[i].SrcBlendAlpha = D3D11_BLEND_SRC_ALPHA;
+			blendDesc.RenderTarget[i].DestBlend = D3D11_BLEND_DEST_COLOR;
+			blendDesc.RenderTarget[i].DestBlendAlpha = D3D11_BLEND_DEST_ALPHA;
+			blendDesc.RenderTarget[i].BlendOp = D3D11_BLEND_OP_ADD;
+			blendDesc.RenderTarget[i].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+		}
+
+		m_deviceResources->GetD3DDevice()->CreateBlendState(&blendDesc, blendState.GetAddressOf());
 		
 }
 
@@ -1622,6 +1822,10 @@ void Sample3DSceneRenderer::ReleaseDeviceDependentResources()
 	m_indexBuffer_Pyramid.Reset();
 	m_constantBuffer_Pyramid.Reset();
 
+	//Reset Pyramid2
+	m_vertexBuffer_Pyramid2.Reset();
+	m_indexBuffer_Pyramid2.Reset();
+	m_constantBuffer_Pyramid2.Reset();
 
 	//Reset VendingMachine Model
 	m_vertexBuffer_objModel.Reset();
@@ -1676,7 +1880,18 @@ void Sample3DSceneRenderer::ReleaseDeviceDependentResources()
 	m_DirBuffer_wall.Reset();
 	m_PointBuffer_wall.Reset();
 	m_SpotBuffer_wall.Reset();
-	///
+
+	//Reset Door
+	m_vertexBuffer_door.Reset();
+	m_indexBuffer_door.Reset();
+	m_constantBuffer_door.Reset();
+	m_constantInstanceBuffer_door.Reset();
+	doorTexture.Reset();
+	doorView.Reset();
+
+	m_DirBuffer_door.Reset();
+	m_PointBuffer_door.Reset();
+	m_SpotBuffer_door.Reset();
 
 	//Reset Floor
 	m_vertexBuffer_floor.Reset();
@@ -1743,8 +1958,15 @@ void Sample3DSceneRenderer::ReleaseDeviceDependentResources()
 	tvTexture.Reset();
 	tvView.Reset();	
 	m_DirBuffer_tv.Reset();
+
+
+	//tranparent
+	blendState.Reset();
+
+
 	///
 }
+
 
 bool Sample3DSceneRenderer::LoadOBJModel(const char* path, std::vector <VertexPositionUVNORMAL> &out_verts,std::vector <unsigned int> &out_indices)
 {
@@ -2021,6 +2243,10 @@ void Sample3DSceneRenderer::RenderToTexture()
 	m_constantBufferData_wall.view = m_constantBufferData_alien.view;
 	m_constantBufferData_wall.projection = m_constantBufferData_alien.projection;
 
+	//door
+	m_constantBufferData_door.view = m_constantBufferData_alien.view;
+	m_constantBufferData_door.projection = m_constantBufferData_alien.projection;
+
 	//floor
 	m_constantBufferData_floor.view = m_constantBufferData_alien.view;
 	m_constantBufferData_floor.projection = m_constantBufferData_alien.projection;
@@ -2054,6 +2280,72 @@ void Sample3DSceneRenderer::RenderToTexture()
 }
 
 
+void Sample3DSceneRenderer::DrawCube()
+{
+	// Prepare the constant buffer to send it to the graphics device.
+	auto context = m_deviceResources->GetD3DDeviceContext();
+	context->UpdateSubresource1(
+		m_constantBuffer.Get(),
+		0,
+		NULL,
+		&m_constantBufferData,
+		0,
+		0,
+		0
+	);
+
+	// Each vertex is one instance of the VertexPositionColor struct.
+	UINT stride = sizeof(VertexPositionColor);
+	UINT offset = 0;
+	context->IASetVertexBuffers(
+		0,
+		1,
+		m_vertexBuffer.GetAddressOf(),
+		&stride,
+		&offset
+	);
+
+	context->IASetIndexBuffer(
+		m_indexBuffer.Get(),
+		DXGI_FORMAT_R16_UINT, // Each index is one 16-bit unsigned integer (short).
+		0
+	);
+
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	context->IASetInputLayout(m_inputLayout.Get());
+
+	// Attach our vertex shader.
+	context->VSSetShader(
+		m_vertexShader.Get(),
+		nullptr,
+		0
+	);
+
+	// Send the constant buffer to the graphics device.
+	context->VSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
+
+	// Attach our pixel shader.
+	context->PSSetShader(
+		m_pixelShader.Get(),
+		nullptr,
+		0
+	);
+
+	// Draw the objects.
+	context->DrawIndexed(
+		m_indexCount,
+		0,
+		0
+	);
+}
 
 void Sample3DSceneRenderer::DrawSkybox()
 {
@@ -2310,7 +2602,7 @@ void Sample3DSceneRenderer::DrawPyramid()
 
 	// Prepare the constant buffer to send it to the graphics device.
 	context->UpdateSubresource1(
-		m_constantBuffer.Get(),
+		m_constantBuffer_Pyramid.Get(),
 		0,
 		NULL,
 		&m_constantBufferData_Pyramid,
@@ -2352,6 +2644,64 @@ void Sample3DSceneRenderer::DrawPyramid()
 
 	context->DrawIndexed(
 		m_indexCount_Pyramid,
+		0,
+		0
+	);
+	
+}
+
+void Sample3DSceneRenderer::DrawPyramid2()
+{
+	////Start of Draw a Pyramid////
+	auto context = m_deviceResources->GetD3DDeviceContext();
+	UINT stride = 0;
+	UINT offset = 0;
+	stride = sizeof(VertexPositionColor);
+
+	// Prepare the constant buffer to send it to the graphics device.
+	context->UpdateSubresource1(
+		m_constantBuffer_Pyramid2.Get(),
+		0,
+		NULL,
+		&m_constantBufferData_Pyramid2,
+		0,
+		0,
+		0
+	);
+
+
+	context->IASetVertexBuffers(
+		0,
+		1,
+		m_vertexBuffer_Pyramid2.GetAddressOf(),
+		&stride,
+		&offset
+	);
+
+	context->IASetIndexBuffer(
+		m_indexBuffer_Pyramid2.Get(),
+		DXGI_FORMAT_R16_UINT, // Each index is one 16-bit unsigned integer (short).
+		0
+	);
+
+	context->IASetInputLayout(m_inputLayout.Get());
+
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	context->VSSetShader(
+		m_vertexShader.Get(),
+		nullptr,
+		0
+	);
+
+	context->PSSetShader(
+		m_pixelShader.Get(),
+		nullptr,
+		0
+	);
+
+	context->DrawIndexed(
+		m_indexCount_Pyramid2,
 		0,
 		0
 	);
@@ -3198,6 +3548,130 @@ void Sample3DSceneRenderer::DrawTv()
 	///
 }
 
+void Sample3DSceneRenderer::DrawDoor()
+{
+	//Draw door//
+	auto context = m_deviceResources->GetD3DDeviceContext();
+	UINT stride = 0;
+	UINT offset = 0;
+	//update dir_buffer
+	context->UpdateSubresource1(
+		m_DirBuffer_door.Get(),
+		0,
+		NULL,
+		&m_dirLight_door,
+		0,
+		0,
+		0
+	);
+	//update point_buffer
+	context->UpdateSubresource1(
+		m_PointBuffer_door.Get(),
+		0,
+		NULL,
+		&m_pointLight_door,
+		0,
+		0,
+		0
+	);
+	//update spot_buffer
+	context->UpdateSubresource1(
+		m_SpotBuffer_door.Get(),
+		0,
+		NULL,
+		&m_spotLight_door,
+		0,
+		0,
+		0
+	);
+	context->UpdateSubresource1(
+		m_constantInstanceBuffer_door.Get(),
+		0,
+		NULL,
+		&m_instancing_door,
+		0,
+		0,
+		0
+	);
+	stride = sizeof(VertexPositionUVNORMAL);
+	context->IASetVertexBuffers(
+		0,
+		1,
+		m_vertexBuffer_door.GetAddressOf(),
+		&stride,
+		&offset
+	);
+
+	context->IASetIndexBuffer(
+		m_indexBuffer_door.Get(),
+		DXGI_FORMAT_R32_UINT,
+		0
+	);
+
+	context->IASetInputLayout(m_inputLayout_objModel.Get()); //Thats fine using same layout
+
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+
+	context->VSSetShader(
+		m_vertexShader_door.Get(),
+		nullptr,
+		0
+	); //Thats fine using same shader as floor for instancing
+	context->PSSetShader(
+		m_pixelShader_objModel.Get(),
+		nullptr,
+		0
+	); //Thats fine using same shader
+
+	context->VSSetConstantBuffers1(
+		1,
+		1,
+		m_constantInstanceBuffer_door.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_door.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	//Set lighting buffers
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_DirBuffer_door.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		1,
+		1,
+		m_PointBuffer_door.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		2,
+		1,
+		m_SpotBuffer_door.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetShaderResources(0, 1, doorView.GetAddressOf());
+	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf()); //thats fine using same sampler
+
+	context->DrawIndexedInstanced(
+		m_indexCount_door,
+		64,
+		0,
+		0,
+		0
+	);
+}
+
 void Sample3DSceneRenderer::ResetObjectsBack2Camera1()
 {
 	XMMATRIX newcamera = XMLoadFloat4x4(&camera);
@@ -3215,6 +3689,10 @@ void Sample3DSceneRenderer::ResetObjectsBack2Camera1()
 	//wall
 	m_constantBufferData_wall.view = m_constantBufferData.view;
 	m_constantBufferData_wall.projection = m_constantBufferData.projection;
+
+	//door
+	m_constantBufferData_door.view = m_constantBufferData.view;
+	m_constantBufferData_door.projection = m_constantBufferData.projection;
 
 	//floor
 	m_constantBufferData_floor.view = m_constantBufferData.view;
@@ -3240,4 +3718,85 @@ void Sample3DSceneRenderer::ResetObjectsBack2Camera1()
 	m_constantBufferData_station.view = m_constantBufferData.view;
 	m_constantBufferData_station.projection = m_constantBufferData.projection;
 
+}
+
+void Sample3DSceneRenderer::ResetObjectsNonTranparent()
+{
+	auto context = m_deviceResources->GetD3DDeviceContext();
+
+	context->OMSetBlendState(NULL, NULL, 0xffffffff);
+}
+
+void Sample3DSceneRenderer::SortTranparentObjectsAndDrawThem()
+{
+	float cubeDis, pyDis, py2Dis;
+	cubeDis = m_constantBufferData.model._34 - m_constantBufferData_drone.model._34;
+	pyDis = m_constantBufferData_Pyramid.model._34 - m_constantBufferData_drone.model._34;
+	py2Dis = m_constantBufferData_Pyramid2.model._34 - m_constantBufferData_drone.model._34;
+	if (cubeDis < 0.0f)
+	{
+		cubeDis = cubeDis * -1;
+	}
+	if (pyDis < 0.0f)
+	{
+		pyDis = pyDis * -1;
+	}
+	if (py2Dis < 0.0f)
+	{
+		py2Dis = py2Dis * -1;
+	}
+
+	//draw furthur object
+	if (cubeDis > pyDis && cubeDis > py2Dis)
+	{
+		DrawCube();
+	}
+	if (pyDis > cubeDis && pyDis > py2Dis)
+	{
+		DrawPyramid();
+	}
+	if (py2Dis > cubeDis && py2Dis > pyDis)
+	{
+		DrawPyramid2();
+	}
+
+	//draw mid object
+	if (cubeDis < pyDis && cubeDis > py2Dis)
+	{
+		DrawCube();
+	}
+	else if (cubeDis > pyDis && cubeDis < py2Dis)
+	{
+		DrawCube();
+	}
+	if (pyDis < cubeDis && pyDis > py2Dis)
+	{
+		DrawPyramid();
+	}
+	else if (pyDis > cubeDis && pyDis < py2Dis)
+	{
+		DrawPyramid();
+	}
+	if (py2Dis < cubeDis && py2Dis > pyDis)
+	{
+		DrawPyramid2();
+	}
+	else if (py2Dis > cubeDis && py2Dis < pyDis)
+	{
+		DrawPyramid2();
+	}
+
+	//draw closest object
+	if (cubeDis < pyDis && cubeDis < py2Dis)
+	{
+		DrawCube();
+	}
+	if (pyDis < cubeDis && pyDis < py2Dis)
+	{
+		DrawPyramid();
+	}
+	if (py2Dis < cubeDis && py2Dis < pyDis)
+	{
+		DrawPyramid2();
+	}
 }

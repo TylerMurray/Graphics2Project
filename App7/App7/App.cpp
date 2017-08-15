@@ -197,6 +197,8 @@ bool w_down = false;
 bool a_down = false;
 bool s_down = false;
 bool d_down = false;
+bool f_down = false;
+bool g_down = false;
 
 char buttons[256] = {};
 
@@ -216,6 +218,12 @@ void App7::App::OnKeyDown(Windows::UI::Core::CoreWindow ^ sender, Windows::UI::C
 
 	if (args->VirtualKey == Windows::System::VirtualKey::D)
 		d_down = true;
+
+	if (args->VirtualKey == Windows::System::VirtualKey::F)
+		f_down = true;
+
+	if (args->VirtualKey == Windows::System::VirtualKey::G)
+		g_down = true;
 }
 
 void App7::App::OnKeyUp(Windows::UI::Core::CoreWindow ^ sender, Windows::UI::Core::KeyEventArgs ^ args)
@@ -234,6 +242,12 @@ void App7::App::OnKeyUp(Windows::UI::Core::CoreWindow ^ sender, Windows::UI::Cor
 
 	if (args->VirtualKey == Windows::System::VirtualKey::D)
 		d_down = false;
+
+	if (args->VirtualKey == Windows::System::VirtualKey::F)
+		f_down = false;
+
+	if (args->VirtualKey == Windows::System::VirtualKey::G)
+		g_down = false;
 }
 ///
 

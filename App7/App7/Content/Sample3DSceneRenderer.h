@@ -35,11 +35,15 @@ namespace App7
 
 		void RenderToTexture();
 
+		void DrawCube();
+
 		void DrawSkybox();
 
 		void DrawStation();
 
 		void DrawPyramid();
+
+		void DrawPyramid2();
 
 		void DrawVendingMachine();
 
@@ -55,7 +59,13 @@ namespace App7
 
 		void DrawTv();
 
+		void DrawDoor();
+
 		void ResetObjectsBack2Camera1();
+
+		void ResetObjectsNonTranparent();
+
+		void SortTranparentObjectsAndDrawThem();
 
 		///
 
@@ -93,6 +103,12 @@ namespace App7
 		float SpotLightConeRatio = 0.0f;
 		float lightTime = 0.0f;
 		bool LightON = true;
+		bool ToggleLight = true;
+
+
+		//Tranparent
+		Microsoft::WRL::ComPtr<ID3D11BlendState> blendState;
+
 
 		//Render2Texture 
 		//Texture
@@ -124,7 +140,13 @@ namespace App7
 		ModelViewProjectionConstantBuffer m_constantBufferData_Pyramid;
 		uint32 m_indexCount_Pyramid;
 
-
+		//Pyramid2
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_Pyramid2;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer_Pyramid2;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer_Pyramid2;
+		//System resources for Pyramid
+		ModelViewProjectionConstantBuffer m_constantBufferData_Pyramid2;
+		uint32 m_indexCount_Pyramid2;
 
 		//VendingMachine
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_objModel;
@@ -170,6 +192,24 @@ namespace App7
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_PointBuffer_wall;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_SpotBuffer_wall;
 
+		//door
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_door;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer_door;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer_door;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>        m_constantInstanceBuffer_door;
+		Instancing m_instancing_door;
+		Microsoft::WRL::ComPtr<ID3D11VertexShader>	m_vertexShader_door;
+		ModelViewProjectionConstantBuffer m_constantBufferData_door;
+		uint32 m_indexCount_door;
+
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> doorTexture;
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> doorView;
+		dir_light m_dirLight_door;
+		point_light m_pointLight_door;
+		spot_light m_spotLight_door;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_DirBuffer_door;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_PointBuffer_door;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_SpotBuffer_door;
 
 
 		//Alien
