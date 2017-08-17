@@ -71,6 +71,7 @@ void Sample3DSceneRenderer::CreateWindowSizeDependentResources()
 		XMMatrixTranspose(perspectiveMatrix * orientationMatrix)
 		);
 
+
 	// Eye is at (0,0.7,1.5), looking at point (0,-0.1,0) with the up-vector along the y-axis.
 	static const XMVECTORF32 eye = { 0.0f, 0.7f, -1.5f, 0.0f };
 	static const XMVECTORF32 at = { 0.0f, 0.0f, 0.0f, 0.0f };
@@ -108,7 +109,9 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 		double totalRotation = timer.GetTotalSeconds() * radiansPerSecond;
 		float radians = static_cast<float>(fmod(totalRotation, XM_2PI));
 
+		//cube//
 		Rotate(radians);
+
 	}
 
 	///
@@ -134,10 +137,6 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 		newcamera.r[3] = newcamera.r[3] + newcamera.r[0] * timer.GetElapsedSeconds() * 5.0;
 	}
 
-	//Windows::UI::Input::PointerPoint^ point = nullptr;
-
-	//if(mouse_move)/*This crashes unless a mouse event actually happened*/
-	//point = Windows::UI::Input::PointerPoint::GetCurrentPoint(pointerID);
 
 	if (mouse_move)
 	{
@@ -152,7 +151,9 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 		}
 		
 	}
-
+	float radiansPerSecond = XMConvertToRadians(m_degreesPerSecond);
+	double totalRotation = timer.GetTotalSeconds() * radiansPerSecond;
+	float radians = static_cast<float>(fmod(totalRotation, XM_2PI));
 	XMStoreFloat4x4(&camera, newcamera);
 
 	/*Be sure to inverse the camera & Transpose because they don't use pragma pack row major in shaders*/
@@ -168,7 +169,6 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 	
 	//SpotLight
 	lightTime += timer.GetElapsedSeconds();
-	//Windows::UI::Core::CoreVirtualKeyStates F_down = gwindow->GetAsyncKeyState(Windows::System::VirtualKey::F);
 
 	if (f_down)
 	{
@@ -202,20 +202,13 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 	}
 
 		////Pyramid////	
-	XMMATRIX model = XMLoadFloat4x4(&m_constantBufferData.model);
-	XMMATRIX view = XMLoadFloat4x4(&m_constantBufferData.view);
-	XMMATRIX projection = XMLoadFloat4x4(&m_constantBufferData.projection);
-
 		m_constantBufferData_Pyramid = m_constantBufferData;
-		XMStoreFloat4x4(&m_constantBufferData_Pyramid.model, XMMatrixTranspose(model));
-		XMStoreFloat4x4(&m_constantBufferData_Pyramid.view, XMMatrixTranspose(view));
-		XMStoreFloat4x4(&m_constantBufferData_Pyramid.projection, XMMatrixTranspose(projection));
-
-		XMStoreFloat4x4(&m_constantBufferData_Pyramid.model, XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.0f, 1.5f)));
+	    XMStoreFloat4x4(&m_constantBufferData_Pyramid.model, XMMatrixIdentity());
+		XMStoreFloat4x4(&m_constantBufferData_Pyramid.model, XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.0f, 4.0f)));
 
 		////Pyramid2////	
-		m_constantBufferData_Pyramid2 = m_constantBufferData_Pyramid;
-		XMStoreFloat4x4(&m_constantBufferData_Pyramid2.model, XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.0f, 3.5f)));
+		m_constantBufferData_Pyramid2 = m_constantBufferData;
+		XMStoreFloat4x4(&m_constantBufferData_Pyramid2.model, XMMatrixTranspose(XMMatrixTranslation(0.0f, 0.0f, 6.0f)));
 
 		////wall////																																			 
 		m_constantBufferData_wall = m_constantBufferData;
@@ -419,6 +412,29 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 		XMStoreFloat4(&m_spotLight_station.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
 		XMStoreFloat4(&m_spotLight_station.spot_coneRatio, XMVECTOR{ SpotLightConeRatio, 0.0f, 0.0f, 0.0f });
 
+		////Spaceship////
+		m_constantBufferData_ship = m_constantBufferData;
+		//XMStoreFloat4x4(&m_constantBufferData_ship.model, XMMatrixTranspose(XMMatrixScaling(7.0f, 7.0f, 7.0f)*XMMatrixTranslation(-4.0f, -4.0f, -7.5f)));
+		MoveSpaceShip(timer);
+		XMStoreFloat4(&m_dirLight_ship.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 1.0f });
+		XMStoreFloat4(&m_dirLight_ship.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+
+		XMStoreFloat4(&m_spotLight_ship.spot_position, XMVECTOR{ XMVectorGetX(camPos), XMVectorGetY(camPos) - 0.5f, XMVectorGetZ(camPos), 1.0f });
+		XMStoreFloat4(&m_spotLight_ship.spot_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+		XMStoreFloat4(&m_spotLight_ship.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
+		XMStoreFloat4(&m_spotLight_ship.spot_coneRatio, XMVECTOR{ SpotLightConeRatio, 0.0f, 0.0f, 0.0f });
+
+		////Planet////
+		m_constantBufferData_planet = m_constantBufferData;
+		XMStoreFloat4x4(&m_constantBufferData_planet.model, XMMatrixTranspose(XMMatrixRotationY(radians)*XMMatrixScaling(30.0f, 30.0f, 30.0f)*XMMatrixTranslation(-100.0f, 0.0f, 0.0f)));
+		XMStoreFloat4(&m_dirLight_planet.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 1.0f });
+		XMStoreFloat4(&m_dirLight_planet.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+
+		XMStoreFloat4(&m_spotLight_planet.spot_position, XMVECTOR{ XMVectorGetX(camPos), XMVectorGetY(camPos) - 0.5f, XMVectorGetZ(camPos), 1.0f });
+		XMStoreFloat4(&m_spotLight_planet.spot_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+		XMStoreFloat4(&m_spotLight_planet.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
+		XMStoreFloat4(&m_spotLight_planet.spot_coneRatio, XMVECTOR{ SpotLightConeRatio, 0.0f, 0.0f, 0.0f });
+
 		//TV//
 		m_constantBufferData_tv = m_constantBufferData;
 		XMStoreFloat4x4(&m_constantBufferData_tv.model, XMMatrixTranspose(XMMatrixTranslation(0.075f, 1.0f, -5.0f)*XMMatrixScaling(2.5f,1.5f,2.5f)));
@@ -431,7 +447,7 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 void Sample3DSceneRenderer::Rotate(float radians)
 {
 	// Prepare to pass the updated model matrix to the shader
-	XMStoreFloat4x4(&m_constantBufferData.model, XMMatrixTranspose(XMMatrixRotationY(radians)));
+	XMStoreFloat4x4(&m_constantBufferData.model, XMMatrixTranspose(XMMatrixRotationY(radians)*XMMatrixTranslation(0.0f, 0.0f, 2.0f)));
 }
 
 void Sample3DSceneRenderer::StartTracking()
@@ -473,27 +489,7 @@ void Sample3DSceneRenderer::Render()
 	context->ClearDepthStencilView(m_deviceResources->GetDepthStencilView(), D3D11_CLEAR_DEPTH | D3D11_CLEAR_STENCIL, 1.0f, 0);
 	ResetObjectsBack2Camera1();
 
-	float blendFactor[4] = { 0.5f, 0.5f, 0.5f, 0.5f };
-	unsigned int SampleMask = 0xffffffff;
-	context->OMSetBlendState(blendState.Get(), blendFactor, SampleMask);
-
 	//Draw My Objects
-
-
-	//SortTranparentObjectsAndDrawThem();
-
-	DrawCube();
-	DrawPyramid();
-	DrawPyramid2();
-
-	//DrawPyramid2();
-	//DrawPyramid();
-	//DrawCube();
-	
-	
-
-	ResetObjectsNonTranparent();
-
 	DrawVendingMachine();
 	DrawBarrel();
 	DrawWall();
@@ -504,6 +500,15 @@ void Sample3DSceneRenderer::Render()
 	DrawAlien();
 	DrawTv();
 	DrawDoor();
+	DrawSpaceship();
+	DrawPlanet();
+
+	//tranparent objects
+	float blendFactor[4] = { 0.25f, 0.25f, 0.25f, 0.25f };
+	unsigned int SampleMask = 0xffffffff;
+	context->OMSetBlendState(blendState.Get(), blendFactor, SampleMask);
+	SortTranparentObjectsAndDrawThem();
+	ResetObjectsNonTranparent();
 }
 
 void Sample3DSceneRenderer::CreateDeviceDependentResources()
@@ -598,20 +603,38 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 		// first triangle of this mesh.
 		static const unsigned short cubeIndices [] =
 		{
+			1,0,2, // -x2
+			3,1,2,
+
 			0,1,2, // -x
 			1,3,2,
+
+			6,4,5, // +x2
+			6,5,7,
 
 			4,6,5, // +x
 			5,6,7,
 
+			5,0,1, // -y2
+			4,0,5,
+
 			0,5,1, // -y
 			0,4,5,
+
+			7,2,6, // +y2
+			3,2,7,
 
 			2,7,6, // +y
 			2,3,7,
 
+			6,0,4, // -z2
+			2,0,6,
+
 			0,6,4, // -z
 			0,2,6,
+
+			7,1,3, // +z2
+			5,1,7,
 
 			1,7,3, // +z
 			1,5,7,
@@ -650,8 +673,8 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 		// Load mesh vertices. Each vertex has a position and a color.
 		static const VertexPositionColor PyramidVertices[] =
 		{
-			{ XMFLOAT3(-0.5f, -1.0f, 0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
-			{ XMFLOAT3(0.5f, -1.0f,  0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f) },
+			{ XMFLOAT3(-0.5f, -1.0f, 0.5f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
+			{ XMFLOAT3(0.5f, -1.0f,  0.5f), XMFLOAT3(1.0f, 1.0f, 0.0f) },
 			{ XMFLOAT3(-0.5f,  -1.0f, -0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f) },
 			{ XMFLOAT3(0.5f,  -1.0f,  -0.5f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
 			{ XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, 1.0f) }
@@ -675,18 +698,34 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 
 		static const unsigned short pyramidIndices[] =
 		{
+			//bottom face (backwards)
+			1,2,0,
+			2,1,3,
+
 			//bottom face
 			2,1,0, 
 			1,2,3, 
 
+			//left face (backwards)
+			4,0,2,
+
 			//left face
 			0,4,2,
+
+			//right face (backwards)
+			3,1,4,
 
 			//right face
 			1,3,4,
 
+			//front face (backward)
+			2,3,4,
+
 			//front face
 			3,2,4,
+
+			//back face (backwards)
+			1,0,4,
 
 			//back face
 			0,1,4,
@@ -720,10 +759,10 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 		static const VertexPositionColor Pyramid2Vertices[] =
 		{
 			{ XMFLOAT3(-0.5f, -1.0f, 0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
-			{ XMFLOAT3(0.5f, -1.0f,  0.5f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
-			{ XMFLOAT3(-0.5f,  -1.0f, -0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
-			{ XMFLOAT3(0.5f,  -1.0f,  -0.5f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
-			{ XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT3(1.0f, 0.0f, 1.0f) }
+			{ XMFLOAT3(0.5f, -1.0f,  0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f) },
+			{ XMFLOAT3(-0.5f,  -1.0f, -0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f) },
+			{ XMFLOAT3(0.5f,  -1.0f,  -0.5f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
+			{ XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT3(1.0f, 0.0f, 0.0f) }
 		};
 
 
@@ -744,18 +783,34 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 
 		static const unsigned short pyramid2Indices[] =
 		{
+			//bottom face (backwards)
+			1,2,0,
+			2,1,3,
+
 			//bottom face
 			2,1,0,
 			1,2,3,
 
+			//left face (backwards)
+			4,0,2,
+
 			//left face
 			0,4,2,
+
+			//right face (backwards)
+			3,1,4,
 
 			//right face
 			1,3,4,
 
+			//front face (backward)
+			2,3,4,
+
 			//front face
 			3,2,4,
+
+			//back face (backwards)
+			1,0,4,
 
 			//back face
 			0,1,4,
@@ -1473,6 +1528,176 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 
 ///////////////////////////////////End of Station////////////////////////////////////
 
+//////////////////////////////////////////Start of Spaceship//////////////////////////////////////////////
+
+//Load in obj file and get info//
+		std::vector<VertexPositionUVNORMAL> shipVertices;
+		std::vector<unsigned int> shipIndices;
+
+		bool res11 = LoadOBJModel("Assets/talon.obj", shipVertices, shipIndices);
+
+		m_indexCount_ship = shipIndices.size();
+
+
+		if (res11 == true)
+		{
+			CD3D11_BUFFER_DESC constantBufferDesc_ship(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&constantBufferDesc_ship,
+					nullptr,
+					&m_constantBuffer_ship
+				)
+			);
+			CD3D11_BUFFER_DESC DirBufferDesc_ship(sizeof(dir_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&DirBufferDesc_ship,
+					nullptr,
+					&m_DirBuffer_ship
+				)
+			);
+			CD3D11_BUFFER_DESC PointBufferDesc_ship(sizeof(point_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&PointBufferDesc_ship,
+					nullptr,
+					&m_PointBuffer_ship
+				)
+			);
+			CD3D11_BUFFER_DESC SpotBufferDesc_ship(sizeof(spot_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&SpotBufferDesc_ship,
+					nullptr,
+					&m_SpotBuffer_ship
+				)
+			);
+
+
+
+			//Data setup//
+			D3D11_SUBRESOURCE_DATA vertexBufferData_ship = { 0 };
+			vertexBufferData_ship.pSysMem = shipVertices.data();
+			vertexBufferData_ship.SysMemPitch = 0;
+			vertexBufferData_ship.SysMemSlicePitch = 0;
+
+			CD3D11_BUFFER_DESC vertexBufferDesc_ship(sizeof(VertexPositionUVNORMAL) * shipVertices.size(), D3D11_BIND_VERTEX_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&vertexBufferDesc_ship,
+					&vertexBufferData_ship,
+					&m_vertexBuffer_ship
+				)
+			);
+
+			D3D11_SUBRESOURCE_DATA indexBufferData_ship = { 0 };
+			indexBufferData_ship.pSysMem = shipIndices.data();
+			indexBufferData_ship.SysMemPitch = 0;
+			indexBufferData_ship.SysMemSlicePitch = 0;
+
+			CD3D11_BUFFER_DESC indexBufferDesc_ship(sizeof(unsigned int) * shipIndices.size(), D3D11_BIND_INDEX_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&indexBufferDesc_ship,
+					&indexBufferData_ship,
+					&m_indexBuffer_ship
+				)
+			);
+		}
+
+		HRESULT result11 = CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(),
+			L"Assets\\talon.dds",
+			((ComPtr<ID3D11Resource>)shipTexture).GetAddressOf(),
+			shipView.GetAddressOf());
+
+///////////////////////////////////End of Spaceship////////////////////////////////////
+
+//////////////////////////////////////////Start of Planet//////////////////////////////////////////////
+
+//Load in obj file and get info//
+		std::vector<VertexPositionUVNORMAL> planetVertices;
+		std::vector<unsigned int> planetIndices;
+
+		bool res12 = LoadOBJModel("Assets/planet.obj", planetVertices, planetIndices);
+
+		m_indexCount_planet = planetIndices.size();
+
+
+		if (res12 == true)
+		{
+			CD3D11_BUFFER_DESC constantBufferDesc_planet(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&constantBufferDesc_planet,
+					nullptr,
+					&m_constantBuffer_planet
+				)
+			);
+			CD3D11_BUFFER_DESC DirBufferDesc_planet(sizeof(dir_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&DirBufferDesc_planet,
+					nullptr,
+					&m_DirBuffer_planet
+				)
+			);
+			CD3D11_BUFFER_DESC PointBufferDesc_planet(sizeof(point_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&PointBufferDesc_planet,
+					nullptr,
+					&m_PointBuffer_planet
+				)
+			);
+			CD3D11_BUFFER_DESC SpotBufferDesc_planet(sizeof(spot_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&SpotBufferDesc_planet,
+					nullptr,
+					&m_SpotBuffer_planet
+				)
+			);
+
+
+
+			//Data setup//
+			D3D11_SUBRESOURCE_DATA vertexBufferData_planet = { 0 };
+			vertexBufferData_planet.pSysMem = planetVertices.data();
+			vertexBufferData_planet.SysMemPitch = 0;
+			vertexBufferData_planet.SysMemSlicePitch = 0;
+
+			CD3D11_BUFFER_DESC vertexBufferDesc_planet(sizeof(VertexPositionUVNORMAL) * planetVertices.size(), D3D11_BIND_VERTEX_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&vertexBufferDesc_planet,
+					&vertexBufferData_planet,
+					&m_vertexBuffer_planet
+				)
+			);
+
+			D3D11_SUBRESOURCE_DATA indexBufferData_planet = { 0 };
+			indexBufferData_planet.pSysMem = planetIndices.data();
+			indexBufferData_planet.SysMemPitch = 0;
+			indexBufferData_planet.SysMemSlicePitch = 0;
+
+			CD3D11_BUFFER_DESC indexBufferDesc_planet(sizeof(unsigned int) * planetIndices.size(), D3D11_BIND_INDEX_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&indexBufferDesc_planet,
+					&indexBufferData_planet,
+					&m_indexBuffer_planet
+				)
+			);
+		}
+
+		HRESULT result12 = CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(),
+			L"Assets\\dragonplanet.dds",
+			((ComPtr<ID3D11Resource>)planetTexture).GetAddressOf(),
+			planetView.GetAddressOf());
+
+///////////////////////////////////End of Planet////////////////////////////////////
+
 //////////////////////////////////////////Start of Alien//////////////////////////////////////////////
 
 //Load in obj file and get info//
@@ -1963,6 +2188,28 @@ void Sample3DSceneRenderer::ReleaseDeviceDependentResources()
 	//tranparent
 	blendState.Reset();
 
+	//spaceship
+	m_vertexBuffer_ship.Reset();
+	m_indexBuffer_ship.Reset();
+	m_constantBuffer_ship.Reset();
+	shipTexture.Reset();
+	shipView.Reset();
+
+	m_DirBuffer_ship.Reset();
+	m_PointBuffer_ship.Reset();
+	m_SpotBuffer_ship.Reset();
+
+
+	//planet
+	m_vertexBuffer_planet.Reset();
+	m_indexBuffer_planet.Reset();
+	m_constantBuffer_planet.Reset();
+	planetTexture.Reset();
+	planetView.Reset();
+
+	m_DirBuffer_planet.Reset();
+	m_PointBuffer_planet.Reset();
+	m_SpotBuffer_planet.Reset();
 
 	///
 }
@@ -2636,6 +2883,14 @@ void Sample3DSceneRenderer::DrawPyramid()
 		0
 	);
 
+	context->VSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_Pyramid.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+
 	context->PSSetShader(
 		m_pixelShader.Get(),
 		nullptr,
@@ -2692,6 +2947,14 @@ void Sample3DSceneRenderer::DrawPyramid2()
 		m_vertexShader.Get(),
 		nullptr,
 		0
+	);
+
+	context->VSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_Pyramid2.GetAddressOf(),
+		nullptr,
+		nullptr
 	);
 
 	context->PSSetShader(
@@ -3671,6 +3934,290 @@ void Sample3DSceneRenderer::DrawDoor()
 		0
 	);
 }
+
+void Sample3DSceneRenderer::DrawSpaceship()
+{
+	auto context = m_deviceResources->GetD3DDeviceContext();
+	UINT stride = 0;
+	UINT offset = 0;
+	//Draw Station//
+	context->UpdateSubresource1(
+		m_constantBuffer_ship.Get(),
+		0,
+		NULL,
+		&m_constantBufferData_ship,
+		0,
+		0,
+		0
+	);
+	//update dir_buffer
+	context->UpdateSubresource1(
+		m_DirBuffer_ship.Get(),
+		0,
+		NULL,
+		&m_dirLight_ship,
+		0,
+		0,
+		0
+	);
+	//update point_buffer
+	context->UpdateSubresource1(
+		m_PointBuffer_ship.Get(),
+		0,
+		NULL,
+		&m_pointLight_ship,
+		0,
+		0,
+		0
+	);
+	////update spot_buffer
+	context->UpdateSubresource1(
+		m_SpotBuffer_ship.Get(),
+		0,
+		NULL,
+		&m_spotLight_ship,
+		0,
+		0,
+		0
+	);
+	stride = sizeof(VertexPositionUVNORMAL);
+	context->IASetVertexBuffers(
+		0,
+		1,
+		m_vertexBuffer_ship.GetAddressOf(),
+		&stride,
+		&offset
+	);
+
+	context->IASetIndexBuffer(
+		m_indexBuffer_ship.Get(),
+		DXGI_FORMAT_R32_UINT,
+		0
+	);
+
+	context->IASetInputLayout(m_inputLayout_objModel.Get()); //Thats fine using same layout
+
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	context->VSSetShader(
+		m_vertexShader_objModel.Get(),
+		nullptr,
+		0
+	); //Thats fine using same shader
+
+	context->PSSetShader(
+		m_pixelShader_objModel.Get(),
+		nullptr,
+		0
+	); //Thats fine using same shader
+
+	context->VSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_ship.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_ship.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	//Set lighting buffers
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_DirBuffer_ship.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		1,
+		1,
+		m_PointBuffer_ship.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		2,
+		1,
+		m_SpotBuffer_ship.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetShaderResources(0, 1, shipView.GetAddressOf());
+	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf()); //thats fine using same sampler
+
+	context->DrawIndexed(
+		m_indexCount_ship,
+		0,
+		0
+	);
+}
+
+void Sample3DSceneRenderer::DrawPlanet()
+{
+	auto context = m_deviceResources->GetD3DDeviceContext();
+	UINT stride = 0;
+	UINT offset = 0;
+	//Draw Station//
+	context->UpdateSubresource1(
+		m_constantBuffer_planet.Get(),
+		0,
+		NULL,
+		&m_constantBufferData_planet,
+		0,
+		0,
+		0
+	);
+	//update dir_buffer
+	context->UpdateSubresource1(
+		m_DirBuffer_planet.Get(),
+		0,
+		NULL,
+		&m_dirLight_planet,
+		0,
+		0,
+		0
+	);
+	//update point_buffer
+	context->UpdateSubresource1(
+		m_PointBuffer_planet.Get(),
+		0,
+		NULL,
+		&m_pointLight_planet,
+		0,
+		0,
+		0
+	);
+	////update spot_buffer
+	context->UpdateSubresource1(
+		m_SpotBuffer_planet.Get(),
+		0,
+		NULL,
+		&m_spotLight_planet,
+		0,
+		0,
+		0
+	);
+	stride = sizeof(VertexPositionUVNORMAL);
+	context->IASetVertexBuffers(
+		0,
+		1,
+		m_vertexBuffer_planet.GetAddressOf(),
+		&stride,
+		&offset
+	);
+
+	context->IASetIndexBuffer(
+		m_indexBuffer_planet.Get(),
+		DXGI_FORMAT_R32_UINT,
+		0
+	);
+
+	context->IASetInputLayout(m_inputLayout_objModel.Get()); //Thats fine using same layout
+
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+	context->VSSetShader(
+		m_vertexShader_objModel.Get(),
+		nullptr,
+		0
+	); //Thats fine using same shader
+
+	context->PSSetShader(
+		m_pixelShader_objModel.Get(),
+		nullptr,
+		0
+	); //Thats fine using same shader
+
+	context->VSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_planet.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_planet.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	//Set lighting buffers
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_DirBuffer_planet.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		1,
+		1,
+		m_PointBuffer_planet.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		2,
+		1,
+		m_SpotBuffer_planet.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetShaderResources(0, 1, planetView.GetAddressOf());
+	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf()); //thats fine using same sampler
+
+	context->DrawIndexed(
+		m_indexCount_planet,
+		0,
+		0
+	);
+}
+
+
+void Sample3DSceneRenderer::MoveSpaceShip(DX::StepTimer const& timer)
+{
+	
+	float radiansPerSecond = XMConvertToRadians(m_degreesPerSecond);
+	double totalRotation = timer.GetTotalSeconds() * radiansPerSecond;
+	float radians = static_cast<float>(fmod(totalRotation, XM_2PI));
+	radians = radians / 3.0f;
+	float radians2 = -1.41f;
+	float radians3 = 2.0f;
+
+
+	if (shipRotate == false)
+	{
+		XMStoreFloat4x4(&m_constantBufferData_ship.model, XMMatrixTranspose(XMMatrixScaling(7.0f, 7.0f, 7.0f)*XMMatrixRotationY(-radians)*XMMatrixTranslation(-4.0f, -4.0f, -7.5f)));
+		if (radians > 1.4f)
+		{
+			shipRotate = true;
+		}
+
+	}
+	if (shipRotate == true && shipUp == false)
+	{
+	
+		XMStoreFloat4x4(&m_constantBufferData_ship.model, XMMatrixTranspose(XMMatrixScaling(7.0f, 7.0f, 7.0f)*XMMatrixRotationY(radians2)*XMMatrixTranslation(-4.0f, -5.5f+radians, -7.5f)));
+		if (radians > 2.0f)
+		{
+			shipUp = true;
+		}
+	}
+	if (shipForward == false && shipRotate == true && shipUp == true)
+	{
+		shipMove += 0.1f;
+		XMStoreFloat4x4(&m_constantBufferData_ship.model, XMMatrixTranspose(XMMatrixScaling(7.0f, 7.0f, 7.0f)*XMMatrixRotationY(radians2)*XMMatrixTranslation(-4.0f - shipMove, -5.5f + radians3, -7.5f)));
+		
+	}
+}
+
+
 
 void Sample3DSceneRenderer::ResetObjectsBack2Camera1()
 {

@@ -145,6 +145,18 @@
     <None Include="Assets\door.dds">
       <Filter>Assets\Textures</Filter>
     </None>
+    <None Include="Assets\talon.obj">
+      <Filter>Assets\Models</Filter>
+    </None>
+    <None Include="Assets\talon.dds">
+      <Filter>Assets\Textures</Filter>
+    </None>
+    <None Include="Assets\planet.obj">
+      <Filter>Assets\Models</Filter>
+    </None>
+    <None Include="Assets\dragonplanet.dds">
+      <Filter>Assets\Textures</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Content\VertexShaderPosUVNormal.hlsl">

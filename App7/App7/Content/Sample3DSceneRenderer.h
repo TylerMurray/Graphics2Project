@@ -61,6 +61,12 @@ namespace App7
 
 		void DrawDoor();
 
+		void DrawSpaceship();
+
+		void DrawPlanet();
+
+		void MoveSpaceShip(DX::StepTimer const& timer);
+
 		void ResetObjectsBack2Camera1();
 
 		void ResetObjectsNonTranparent();
@@ -318,9 +324,44 @@ namespace App7
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_PointBuffer_station;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_SpotBuffer_station;
 
+		//SpaceShip
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_ship;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer_ship;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer_ship;
+		ModelViewProjectionConstantBuffer m_constantBufferData_ship;
+		uint32 m_indexCount_ship;
+
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> shipTexture;
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> shipView;
+		dir_light m_dirLight_ship;
+		point_light m_pointLight_ship;
+		spot_light m_spotLight_ship;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_DirBuffer_ship;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_PointBuffer_ship;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_SpotBuffer_ship;
+
+		bool shipRotate = false;
+		bool shipUp = false;
+		bool shipForward = false;
+		float shipMove = 0.0f;
 
 
-		///
+		//Planet
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_planet;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer_planet;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer_planet;
+		ModelViewProjectionConstantBuffer m_constantBufferData_planet;
+		uint32 m_indexCount_planet;
+
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> planetTexture;
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> planetView;
+		dir_light m_dirLight_planet;
+		point_light m_pointLight_planet;
+		spot_light m_spotLight_planet;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_DirBuffer_planet;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_PointBuffer_planet;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_SpotBuffer_planet;
+
 	};
 }
 
