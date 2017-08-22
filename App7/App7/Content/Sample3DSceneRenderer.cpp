@@ -93,7 +93,10 @@ extern bool a_down;
 extern bool s_down;
 extern bool d_down;
 extern bool f_down;
+extern bool c_down;
+extern bool r_down;
 extern bool g_down;
+extern bool b_down;
 extern bool left_click;
 
 extern char buttons[256];
@@ -175,9 +178,13 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 		ToggleLight = false;
 	}
 
-	if (g_down)
+	if (c_down)
 	{
 		ToggleLight = true;
+		red = 1.0f;
+		green = 1.0f;
+		blue = 1.0f;
+
 	}
 
 	if (LightON == true && ToggleLight == true)
@@ -201,6 +208,33 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 		}
 	}
 
+
+	//spotlight color
+	if (r_down)
+	{
+		red -= 0.01f;
+		if (red < 0.0f)
+		{
+			red = 1.0f;
+		}
+	}
+	if (g_down)
+	{
+		green -= 0.01f;
+		if (green < 0.0f)
+		{
+			green = 1.0f;
+		}
+	}
+	if (b_down)
+	{
+		blue -= 0.01f;
+		if (blue < 0.0f)
+		{
+			blue = 1.0f;
+		}
+	}
+
 		////Pyramid////	
 		m_constantBufferData_Pyramid = m_constantBufferData;
 	    XMStoreFloat4x4(&m_constantBufferData_Pyramid.model, XMMatrixIdentity());
@@ -216,11 +250,11 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 		XMStoreFloat4(&m_dirLight_wall.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 0.1f });
 		XMStoreFloat4(&m_dirLight_wall.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
 
-		XMStoreFloat4(&m_pointLight_wall.point_position, XMVECTOR{ 2.0f, 1.0f + dirY_floor, -1.0f, 0.0f });
+		XMStoreFloat4(&m_pointLight_wall.point_position, XMVECTOR{ 3.0f, -3.0f + dirY_floor, -1.0f, 1.0f });
 		XMStoreFloat4(&m_pointLight_wall.point_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
 
 		XMStoreFloat4(&m_spotLight_wall.spot_position, XMVECTOR{ XMVectorGetX(camPos), XMVectorGetY(camPos) - 0.5f, XMVectorGetZ(camPos), 1.0f });
-		XMStoreFloat4(&m_spotLight_wall.spot_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+		XMStoreFloat4(&m_spotLight_wall.spot_color, XMVECTOR{ red, green, blue, 1.0f });
 		XMStoreFloat4(&m_spotLight_wall.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
 		XMStoreFloat4(&m_spotLight_wall.spot_coneRatio, XMVECTOR{ SpotLightConeRatio, 0.0f, 0.0f, 0.0f });
 
@@ -262,7 +296,7 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 		XMStoreFloat4(&m_pointLight_door.point_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
 
 		XMStoreFloat4(&m_spotLight_door.spot_position, XMVECTOR{ XMVectorGetX(camPos), XMVectorGetY(camPos) - 0.5f, XMVectorGetZ(camPos), 1.0f });
-		XMStoreFloat4(&m_spotLight_door.spot_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+		XMStoreFloat4(&m_spotLight_door.spot_color, XMVECTOR{ red, green, blue, 1.0f });
 		XMStoreFloat4(&m_spotLight_door.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
 		XMStoreFloat4(&m_spotLight_door.spot_coneRatio, XMVECTOR{ SpotLightConeRatio, 0.0f, 0.0f, 0.0f });
 
@@ -281,7 +315,7 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 		XMStoreFloat4(&m_pointLight_objModel.point_color, XMVECTOR{ 1.0f, 1.0f, 0.0f, 1.0f });
 
 		XMStoreFloat4(&m_spotLight_objModel.spot_position, XMVECTOR{ XMVectorGetX(camPos), XMVectorGetY(camPos) - 0.5f, XMVectorGetZ(camPos), 1.0f });
-		XMStoreFloat4(&m_spotLight_objModel.spot_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+		XMStoreFloat4(&m_spotLight_objModel.spot_color, XMVECTOR{ red, green, blue, 1.0f });
 		XMStoreFloat4(&m_spotLight_objModel.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
 		XMStoreFloat4(&m_spotLight_objModel.spot_coneRatio, XMVECTOR{ SpotLightConeRatio, 0.0f, 0.0f, 0.0f });
 
@@ -297,7 +331,7 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 		XMStoreFloat4(&m_pointLight_alien.point_color, XMVECTOR{ 1.0f, 1.0f, 0.0f, 1.0f });
 
 		XMStoreFloat4(&m_spotLight_alien.spot_position, XMVECTOR{ XMVectorGetX(camPos), XMVectorGetY(camPos) - 0.5f, XMVectorGetZ(camPos), 1.0f });
-		XMStoreFloat4(&m_spotLight_alien.spot_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+		XMStoreFloat4(&m_spotLight_alien.spot_color, XMVECTOR{ red, green, blue, 1.0f });
 		XMStoreFloat4(&m_spotLight_alien.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
 		XMStoreFloat4(&m_spotLight_alien.spot_coneRatio, XMVECTOR{ SpotLightConeRatio, 0.0f, 0.0f, 0.0f });
 
@@ -308,7 +342,7 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 		XMStoreFloat4(&m_dirLight_barrel.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
 
 		XMStoreFloat4(&m_spotLight_barrel.spot_position, XMVECTOR{ XMVectorGetX(camPos), XMVectorGetY(camPos) - 0.5f, XMVectorGetZ(camPos), 1.0f });
-		XMStoreFloat4(&m_spotLight_barrel.spot_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+		XMStoreFloat4(&m_spotLight_barrel.spot_color, XMVECTOR{ red, green, blue, 1.0f });
 		XMStoreFloat4(&m_spotLight_barrel.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
 		XMStoreFloat4(&m_spotLight_barrel.spot_coneRatio, XMVECTOR{ SpotLightConeRatio, 0.0f, 0.0f, 0.0f });
 
@@ -350,7 +384,7 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 		XMStoreFloat4(&m_pointLight_floor.point_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
 
 		XMStoreFloat4(&m_spotLight_floor.spot_position, XMVECTOR{ XMVectorGetX(camPos), XMVectorGetY(camPos) - 0.5f, XMVectorGetZ(camPos), 1.0f });
-		XMStoreFloat4(&m_spotLight_floor.spot_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+		XMStoreFloat4(&m_spotLight_floor.spot_color, XMVECTOR{ red, green, blue, 1.0f });
 		XMStoreFloat4(&m_spotLight_floor.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
 		XMStoreFloat4(&m_spotLight_floor.spot_coneRatio, XMVECTOR{ SpotLightConeRatio, 0.0f, 0.0f, 0.0f });
 
@@ -391,24 +425,24 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 		XMStoreFloat4(&m_pointLight_drone.point_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
 
 		XMStoreFloat4(&m_spotLight_drone.spot_position, XMVECTOR{ XMVectorGetX(camPos), XMVectorGetY(camPos) - 0.5f, XMVectorGetZ(camPos), 0.0f });
-		XMStoreFloat4(&m_spotLight_drone.spot_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+		XMStoreFloat4(&m_spotLight_drone.spot_color, XMVECTOR{ red, green, blue, 1.0f });
 		XMStoreFloat4(&m_spotLight_drone.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
 		XMStoreFloat4(&m_spotLight_drone.spot_coneRatio, XMVECTOR{ SpotLightConeRatio, 0.0f, 0.0f, 0.0f });
 
 		////Skybox////
 		m_constantBufferData_sky = m_constantBufferData;
-		XMStoreFloat4x4(&m_constantBufferData_sky.model, XMMatrixTranspose(XMMatrixScaling(100.0f, 100.0f, 100.0f)*XMMatrixTranslation(XMVectorGetX(camPos), XMVectorGetY(camPos), XMVectorGetZ(camPos))));
+		XMStoreFloat4x4(&m_constantBufferData_sky.model, XMMatrixTranspose(XMMatrixScaling(150.0f, 150.0f, 150.0f)*XMMatrixTranslation(XMVectorGetX(camPos), XMVectorGetY(camPos), XMVectorGetZ(camPos))));
 		XMStoreFloat4(&m_dirLight_drone.dir_direction, XMVECTOR{ 0.0f, 0.0f, 0.0f, 0.0f });
 		XMStoreFloat4(&m_dirLight_drone.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
 
 		////Station////
 		m_constantBufferData_station = m_constantBufferData;
-		XMStoreFloat4x4(&m_constantBufferData_station.model, XMMatrixTranspose(XMMatrixScaling(100.0f, 100.0f, 100.0f)*XMMatrixTranslation(7.0f, 8.0f, -10.0f)));
+		XMStoreFloat4x4(&m_constantBufferData_station.model, XMMatrixTranspose(XMMatrixScaling(200.0f, 200.0f, 200.0f)*XMMatrixTranslation(10.0f, 22.0f, -20.0f)));
 		XMStoreFloat4(&m_dirLight_station.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 1.0f });
 		XMStoreFloat4(&m_dirLight_station.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
 
 		XMStoreFloat4(&m_spotLight_station.spot_position, XMVECTOR{ XMVectorGetX(camPos), XMVectorGetY(camPos) - 0.5f, XMVectorGetZ(camPos), 1.0f });
-		XMStoreFloat4(&m_spotLight_station.spot_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+		XMStoreFloat4(&m_spotLight_station.spot_color, XMVECTOR{ red, green, blue, 1.0f });
 		XMStoreFloat4(&m_spotLight_station.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
 		XMStoreFloat4(&m_spotLight_station.spot_coneRatio, XMVECTOR{ SpotLightConeRatio, 0.0f, 0.0f, 0.0f });
 
@@ -420,20 +454,67 @@ void Sample3DSceneRenderer::Update(DX::StepTimer const& timer)
 		XMStoreFloat4(&m_dirLight_ship.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
 
 		XMStoreFloat4(&m_spotLight_ship.spot_position, XMVECTOR{ XMVectorGetX(camPos), XMVectorGetY(camPos) - 0.5f, XMVectorGetZ(camPos), 1.0f });
-		XMStoreFloat4(&m_spotLight_ship.spot_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+		XMStoreFloat4(&m_spotLight_ship.spot_color, XMVECTOR{ red, green, blue, 1.0f });
 		XMStoreFloat4(&m_spotLight_ship.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
 		XMStoreFloat4(&m_spotLight_ship.spot_coneRatio, XMVECTOR{ SpotLightConeRatio, 0.0f, 0.0f, 0.0f });
 
 		////Planet////
 		m_constantBufferData_planet = m_constantBufferData;
-		XMStoreFloat4x4(&m_constantBufferData_planet.model, XMMatrixTranspose(XMMatrixRotationY(radians)*XMMatrixScaling(30.0f, 30.0f, 30.0f)*XMMatrixTranslation(-100.0f, 0.0f, 0.0f)));
+		XMStoreFloat4x4(&m_constantBufferData_planet.model, XMMatrixTranspose(XMMatrixRotationY(radians)*XMMatrixScaling(20.0f, 20.0f, 20.0f)*XMMatrixTranslation(-80.0f, 0.0f, 0.0f)));
 		XMStoreFloat4(&m_dirLight_planet.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 1.0f });
 		XMStoreFloat4(&m_dirLight_planet.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
 
 		XMStoreFloat4(&m_spotLight_planet.spot_position, XMVECTOR{ XMVectorGetX(camPos), XMVectorGetY(camPos) - 0.5f, XMVectorGetZ(camPos), 1.0f });
-		XMStoreFloat4(&m_spotLight_planet.spot_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+		XMStoreFloat4(&m_spotLight_planet.spot_color, XMVECTOR{ red, green, blue, 1.0f });
 		XMStoreFloat4(&m_spotLight_planet.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
 		XMStoreFloat4(&m_spotLight_planet.spot_coneRatio, XMVECTOR{ SpotLightConeRatio, 0.0f, 0.0f, 0.0f });
+
+		XMMATRIX planetModel = XMLoadFloat4x4(&m_constantBufferData_planet.model);
+
+		////rocks////																																			 
+		m_constantBufferData_rock = m_constantBufferData;
+		
+		XMStoreFloat4(&m_dirLight_rock.dir_direction, XMVECTOR{ dirX_floor, dirY_floor, 0.0f, 0.1f });
+		XMStoreFloat4(&m_dirLight_rock.dir_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+
+		XMStoreFloat4(&m_pointLight_rock.point_position, XMVECTOR{ 3.0f, -3.0f + dirY_floor, -1.0f, 0.0f });
+		XMStoreFloat4(&m_pointLight_rock.point_color, XMVECTOR{ 1.0f, 1.0f, 1.0f, 1.0f });
+
+		XMStoreFloat4(&m_spotLight_rock.spot_position, XMVECTOR{ XMVectorGetX(camPos), XMVectorGetY(camPos) - 0.5f, XMVectorGetZ(camPos), 1.0f });
+		XMStoreFloat4(&m_spotLight_rock.spot_color, XMVECTOR{ red, green, blue, 1.0f });
+		XMStoreFloat4(&m_spotLight_rock.spot_coneDir, XMVECTOR{ camDir.x, camDir.y, camDir.z, 0.0f });
+		XMStoreFloat4(&m_spotLight_rock.spot_coneRatio, XMVECTOR{ SpotLightConeRatio, 0.0f, 0.0f, 0.0f });
+
+		//rocks Instancing
+		XMStoreFloat4x4(&m_instancing_rock.world[0], planetModel * XMMatrixTranspose(XMMatrixRotationY(radians*1.5f) * XMMatrixTranslation(0.0f, 1.0f, 8.0f) * XMMatrixScaling(0.25f, 0.25f, 0.25f)));
+		XMStoreFloat4x4(&m_instancing_rock.world[3], planetModel * XMMatrixTranspose(XMMatrixRotationZ(radians) * XMMatrixTranslation(4.0f, -1.0f, 0.0f) * XMMatrixScaling(0.5f, 0.5f, 0.5f)));
+		XMStoreFloat4x4(&m_instancing_rock.world[4], planetModel * XMMatrixTranspose(XMMatrixRotationX(radians) * XMMatrixTranslation(4.0f, 0.0f, 4.0f) * XMMatrixScaling(0.3f, 0.3f, 0.3f)));
+		XMStoreFloat4x4(&m_instancing_rock.world[5], planetModel * XMMatrixTranspose(XMMatrixRotationX(radians) * XMMatrixTranslation(-4.0f, 1.5f, -4.0f) * XMMatrixScaling(0.25f, 0.25f, 0.25f)));
+		XMStoreFloat4x4(&m_instancing_rock.world[6], planetModel * XMMatrixTranspose(XMMatrixRotationX(radians) * XMMatrixTranslation(8.0f, 1.0f, -8.0f) * XMMatrixScaling(0.15f, 0.15f, 0.15f)));
+		XMStoreFloat4x4(&m_instancing_rock.world[7], planetModel * XMMatrixTranspose(XMMatrixRotationX(radians) * XMMatrixTranslation(-8.0f, -0.5f, 8.0f) * XMMatrixScaling(0.2f, 0.2f, 0.2f)));
+
+
+		XMMATRIX rockModel = XMLoadFloat4x4(&m_instancing_rock.world[0]);
+		XMStoreFloat4x4(&m_instancing_rock.world[1], rockModel * XMMatrixTranspose(XMMatrixRotationX(radians*1.5f) * XMMatrixTranslation(0.0f, -1.0f, 2.0f) * XMMatrixScaling(0.75f, 0.75f, 0.75f)));
+		XMStoreFloat4x4(&m_instancing_rock.world[2], rockModel * XMMatrixTranspose(XMMatrixRotationZ(radians*2.5f) * XMMatrixTranslation(3.0f, -1.0f, 0.0f) * XMMatrixScaling(0.5f, 0.5f, 0.5f)));
+
+		XMMATRIX rockModel2 = XMLoadFloat4x4(&m_instancing_rock.world[7]);
+		XMStoreFloat4x4(&m_instancing_rock.world[8], rockModel2 * XMMatrixTranspose(XMMatrixRotationZ(radians*2.0f) * XMMatrixTranslation(-3.0f, 0.0f, 0.0f) * XMMatrixScaling(0.5f, 0.5f, 0.5f)));
+		XMStoreFloat4x4(&m_instancing_rock.world[9], rockModel2 * XMMatrixTranspose(XMMatrixRotationY(radians*3.0f) * XMMatrixTranslation(-2.0f, 0.0f, -4.0f) * XMMatrixScaling(0.4f, 0.4f, 0.4f)));
+
+		XMMATRIX rockModel3 = XMLoadFloat4x4(&m_instancing_rock.world[5]);
+		XMStoreFloat4x4(&m_instancing_rock.world[10], rockModel3 * XMMatrixTranspose(XMMatrixRotationZ(radians*2.5f) * XMMatrixTranslation(-2.0f, 0.0f, 0.0f) * XMMatrixScaling(0.75f, 0.75f, 0.75f)));
+		XMStoreFloat4x4(&m_instancing_rock.world[10], rockModel3 * XMMatrixTranspose(XMMatrixRotationX(radians*2.5f) * XMMatrixTranslation(-2.0f, 0.0f, -2.0f) * XMMatrixScaling(0.75f, 0.75f, 0.75f)));
+
+		XMMATRIX rockModel4 = XMLoadFloat4x4(&m_instancing_rock.world[6]);
+		XMStoreFloat4x4(&m_instancing_rock.world[11], rockModel4 * XMMatrixTranspose(XMMatrixRotationX(radians*1.5f) * XMMatrixTranslation(2.0f, -2.5f, -2.0f) * XMMatrixScaling(0.5f, 0.5f, 0.5f)));
+		XMStoreFloat4x4(&m_instancing_rock.world[12], rockModel4 * XMMatrixTranspose(XMMatrixRotationZ(radians*1.5f) * XMMatrixTranslation(-2.0f, 1.0f, -3.0f) * XMMatrixScaling(0.4f, 0.4f, 0.4f)));
+		XMStoreFloat4x4(&m_instancing_rock.world[13], rockModel4 * XMMatrixTranspose(XMMatrixRotationX(radians) * XMMatrixTranslation(3.0f, 1.0f, 1.0f) * XMMatrixScaling(0.6f, 0.6f, 0.6f)));
+
+
+
+
+		
 
 		//TV//
 		m_constantBufferData_tv = m_constantBufferData;
@@ -502,13 +583,22 @@ void Sample3DSceneRenderer::Render()
 	DrawDoor();
 	DrawSpaceship();
 	DrawPlanet();
+	DrawRocks();
 
 	//tranparent objects
 	float blendFactor[4] = { 0.25f, 0.25f, 0.25f, 0.25f };
 	unsigned int SampleMask = 0xffffffff;
 	context->OMSetBlendState(blendState.Get(), blendFactor, SampleMask);
+	/*ID3D11RenderTargetView *const targets2[1] = { m_deviceResources->GetBackBufferRenderTargetView() };
+	context->OMSetRenderTargets(1, targets2, NULL);*/
 	SortTranparentObjectsAndDrawThem();
+
+	/*DrawCube();
+	DrawPyramid();
+	DrawPyramid2();*/
+
 	ResetObjectsNonTranparent();
+	//context->OMSetRenderTargets(1, targets2, m_deviceResources->GetDepthStencilView());
 }
 
 void Sample3DSceneRenderer::CreateDeviceDependentResources()
@@ -572,13 +662,13 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 		// Load mesh vertices. Each vertex has a position and a color.
 		static const VertexPositionColor cubeVertices[] = 
 		{
-			{XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT3(0.0f, 0.0f, 0.0f)},
-			{XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f)},
-			{XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT3(0.0f, 1.0f, 0.0f)},
-			{XMFLOAT3(-0.5f,  0.5f,  0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f)},
-			{XMFLOAT3( 0.5f, -0.5f, -0.5f), XMFLOAT3(1.0f, 0.0f, 0.0f)},
+			{XMFLOAT3(-0.5f, -0.5f, -0.5f), XMFLOAT3(1.0f, 0.0f, 0.0f)},
+			{XMFLOAT3(-0.5f, -0.5f,  0.5f), XMFLOAT3(0.0f, 1.0f, 0.0f)},
+			{XMFLOAT3(-0.5f,  0.5f, -0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f)},
+			{XMFLOAT3(-0.5f,  0.5f,  0.5f), XMFLOAT3(1.0f, 1.0f, 0.0f)},
+			{XMFLOAT3( 0.5f, -0.5f, -0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f)},
 			{XMFLOAT3( 0.5f, -0.5f,  0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f)},
-			{XMFLOAT3( 0.5f,  0.5f, -0.5f), XMFLOAT3(1.0f, 1.0f, 0.0f)},
+			{XMFLOAT3( 0.5f,  0.5f, -0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f)},
 			{XMFLOAT3( 0.5f,  0.5f,  0.5f), XMFLOAT3(1.0f, 1.0f, 1.0f)},
 		};
 
@@ -606,35 +696,36 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 			1,0,2, // -x2
 			3,1,2,
 
-			0,1,2, // -x
-			1,3,2,
-
 			6,4,5, // +x2
 			6,5,7,
-
-			4,6,5, // +x
-			5,6,7,
 
 			5,0,1, // -y2
 			4,0,5,
 
-			0,5,1, // -y
-			0,4,5,
-
 			7,2,6, // +y2
 			3,2,7,
-
-			2,7,6, // +y
-			2,3,7,
 
 			6,0,4, // -z2
 			2,0,6,
 
-			0,6,4, // -z
-			0,2,6,
-
 			7,1,3, // +z2
 			5,1,7,
+
+
+			0,1,2, // -x
+			1,3,2,
+
+			4,6,5, // +x
+			5,6,7,
+
+			0,5,1, // -y
+			0,4,5,
+
+			2,7,6, // +y
+			2,3,7,
+
+			0,6,4, // -z
+			0,2,6,
 
 			1,7,3, // +z
 			1,5,7,
@@ -654,6 +745,7 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 				&m_indexBuffer
 				)
 			);
+
 	});
 
 
@@ -675,7 +767,7 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 		{
 			{ XMFLOAT3(-0.5f, -1.0f, 0.5f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
 			{ XMFLOAT3(0.5f, -1.0f,  0.5f), XMFLOAT3(1.0f, 1.0f, 0.0f) },
-			{ XMFLOAT3(-0.5f,  -1.0f, -0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f) },
+			{ XMFLOAT3(-0.5f,  -1.0f, -0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f) },
 			{ XMFLOAT3(0.5f,  -1.0f,  -0.5f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
 			{ XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT3(0.0f, 0.0f, 1.0f) }
 		};
@@ -702,30 +794,32 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 			1,2,0,
 			2,1,3,
 
-			//bottom face
-			2,1,0, 
-			1,2,3, 
-
 			//left face (backwards)
 			4,0,2,
-
-			//left face
-			0,4,2,
 
 			//right face (backwards)
 			3,1,4,
 
-			//right face
-			1,3,4,
-
 			//front face (backward)
 			2,3,4,
 
-			//front face
-			3,2,4,
-
 			//back face (backwards)
 			1,0,4,
+
+
+
+			//bottom face
+			2,1,0, 
+			1,2,3, 
+
+			//left face
+			0,4,2,
+
+			//right face
+			1,3,4,			
+
+			//front face
+			3,2,4,
 
 			//back face
 			0,1,4,
@@ -758,11 +852,11 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 		// Load mesh vertices. Each vertex has a position and a color.
 		static const VertexPositionColor Pyramid2Vertices[] =
 		{
-			{ XMFLOAT3(-0.5f, -1.0f, 0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
+			{ XMFLOAT3(-0.5f, -1.0f, 0.5f), XMFLOAT3(1.0f, 0.0f, 0.0f) },
 			{ XMFLOAT3(0.5f, -1.0f,  0.5f), XMFLOAT3(0.0f, 1.0f, 1.0f) },
-			{ XMFLOAT3(-0.5f,  -1.0f, -0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f) },
-			{ XMFLOAT3(0.5f,  -1.0f,  -0.5f), XMFLOAT3(0.0f, 1.0f, 0.0f) },
-			{ XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT3(1.0f, 0.0f, 0.0f) }
+			{ XMFLOAT3(-0.5f,  -1.0f, -0.5f), XMFLOAT3(0.0f, 0.0f, 1.0f) },
+			{ XMFLOAT3(0.5f,  -1.0f,  -0.5f), XMFLOAT3(1.0f, 0.0f, 1.0f) },
+			{ XMFLOAT3(0.0f, 1.0f, 0.0f), XMFLOAT3(0.0f, 1.0f, 0.0f) }
 		};
 
 
@@ -783,34 +877,36 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 
 		static const unsigned short pyramid2Indices[] =
 		{
+
 			//bottom face (backwards)
 			1,2,0,
 			2,1,3,
+
+			//left face (backwards)
+			4,0,2,
+
+			//right face (backwards)
+			3,1,4,
+
+			//front face (backward)
+			2,3,4,
+
+			//back face (backwards)
+			1,0,4,
+
 
 			//bottom face
 			2,1,0,
 			1,2,3,
 
-			//left face (backwards)
-			4,0,2,
-
 			//left face
 			0,4,2,
-
-			//right face (backwards)
-			3,1,4,
 
 			//right face
 			1,3,4,
 
-			//front face (backward)
-			2,3,4,
-
 			//front face
 			3,2,4,
-
-			//back face (backwards)
-			1,0,4,
 
 			//back face
 			0,1,4,
@@ -1945,7 +2041,113 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 			((ComPtr<ID3D11Resource>)wallTexture).GetAddressOf(),
 			doorView.GetAddressOf());
 
-		/////////////////////////////////////////////End of door////////////////////////////////////
+/////////////////////////////////////////////End of door////////////////////////////////////
+
+/////////////////////////////////Start of rocks//////////////////////////////////
+		std::vector<VertexPositionUVNORMAL> rockVertices;
+		std::vector<unsigned int> rockIndices;
+
+		bool res14 = LoadOBJModel("Assets/asteroid.obj", rockVertices, rockIndices);
+
+		m_indexCount_rock = rockIndices.size();
+
+
+		if (res14 == true)
+		{
+			// Load shaders asynchronously.
+			auto loadVSTask2 = DX::ReadDataAsync(L"VertexInstancingShader.cso");
+
+			// After the vertex shader file is loaded, create the shader and input layout.
+			auto createVSTask2 = loadVSTask2.then([this](const std::vector<byte>& fileData) {
+				DX::ThrowIfFailed(
+					m_deviceResources->GetD3DDevice()->CreateVertexShader(
+						&fileData[0],
+						fileData.size(),
+						nullptr,
+						&m_vertexShader_rock
+					)
+				);
+			});
+
+			CD3D11_BUFFER_DESC constantBufferDesc_rock(sizeof(ModelViewProjectionConstantBuffer), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&constantBufferDesc_rock,
+					nullptr,
+					&m_constantBuffer_rock
+				)
+			);
+			CD3D11_BUFFER_DESC DirBufferDesc_rock(sizeof(dir_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&DirBufferDesc_rock,
+					nullptr,
+					&m_DirBuffer_rock
+				)
+			);
+			CD3D11_BUFFER_DESC PointBufferDesc_rock(sizeof(point_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&PointBufferDesc_rock,
+					nullptr,
+					&m_PointBuffer_rock
+				)
+			);
+			CD3D11_BUFFER_DESC SpotBufferDesc_rock(sizeof(spot_light), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&SpotBufferDesc_rock,
+					nullptr,
+					&m_SpotBuffer_rock
+				)
+			);
+			CD3D11_BUFFER_DESC InstancingBufferDesc_rock(sizeof(Instancing), D3D11_BIND_CONSTANT_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&InstancingBufferDesc_rock,
+					nullptr,
+					&m_constantInstanceBuffer_rock
+				)
+			);
+
+
+			//Data setup//
+			D3D11_SUBRESOURCE_DATA vertexBufferData_rock = { 0 };
+			vertexBufferData_rock.pSysMem = rockVertices.data();
+			vertexBufferData_rock.SysMemPitch = 0;
+			vertexBufferData_rock.SysMemSlicePitch = 0;
+
+			CD3D11_BUFFER_DESC vertexBufferDesc_rock(sizeof(VertexPositionUVNORMAL) * rockVertices.size(), D3D11_BIND_VERTEX_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&vertexBufferDesc_rock,
+					&vertexBufferData_rock,
+					&m_vertexBuffer_rock
+				)
+			);
+
+			D3D11_SUBRESOURCE_DATA indexBufferData_rock = { 0 };
+			indexBufferData_rock.pSysMem = rockIndices.data();
+			indexBufferData_rock.SysMemPitch = 0;
+			indexBufferData_rock.SysMemSlicePitch = 0;
+
+			CD3D11_BUFFER_DESC indexBufferDesc_rock(sizeof(unsigned int) * rockIndices.size(), D3D11_BIND_INDEX_BUFFER);
+			DX::ThrowIfFailed(
+				m_deviceResources->GetD3DDevice()->CreateBuffer(
+					&indexBufferDesc_rock,
+					&indexBufferData_rock,
+					&m_indexBuffer_rock
+				)
+			);
+		}
+
+		HRESULT result14 = CreateDDSTextureFromFile(m_deviceResources->GetD3DDevice(),
+			L"Assets\\rock.dds",
+			((ComPtr<ID3D11Resource>)rockTexture).GetAddressOf(),
+			rockView.GetAddressOf());
+
+/////////////////////////////////////////////End of rocks////////////////////////////////////
+
 
 ////////////////////////////////Render to texture//////////////////////////////////////
 
@@ -2018,13 +2220,13 @@ void Sample3DSceneRenderer::CreateDeviceDependentResources()
 		for (unsigned int i = 0; i < 8; i++)
 		{
 			blendDesc.RenderTarget[i].BlendEnable = true;
-			blendDesc.RenderTarget[i].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 			blendDesc.RenderTarget[i].SrcBlend = D3D11_BLEND_SRC_COLOR;
 			blendDesc.RenderTarget[i].SrcBlendAlpha = D3D11_BLEND_SRC_ALPHA;
 			blendDesc.RenderTarget[i].DestBlend = D3D11_BLEND_DEST_COLOR;
-			blendDesc.RenderTarget[i].DestBlendAlpha = D3D11_BLEND_DEST_ALPHA;
+			blendDesc.RenderTarget[i].DestBlendAlpha = D3D11_BLEND_INV_SRC_ALPHA;
 			blendDesc.RenderTarget[i].BlendOp = D3D11_BLEND_OP_ADD;
 			blendDesc.RenderTarget[i].BlendOpAlpha = D3D11_BLEND_OP_ADD;
+			blendDesc.RenderTarget[i].RenderTargetWriteMask = D3D11_COLOR_WRITE_ENABLE_ALL;
 		}
 
 		m_deviceResources->GetD3DDevice()->CreateBlendState(&blendDesc, blendState.GetAddressOf());
@@ -2210,6 +2412,16 @@ void Sample3DSceneRenderer::ReleaseDeviceDependentResources()
 	m_DirBuffer_planet.Reset();
 	m_PointBuffer_planet.Reset();
 	m_SpotBuffer_planet.Reset();
+
+
+	//rocks
+	m_vertexBuffer_rock.Reset();
+	m_indexBuffer_rock.Reset();
+	m_constantBuffer_rock.Reset();
+	m_constantInstanceBuffer_rock.Reset();
+	rockTexture.Reset();
+	rockView.Reset();
+
 
 	///
 }
@@ -4179,6 +4391,129 @@ void Sample3DSceneRenderer::DrawPlanet()
 	);
 }
 
+void Sample3DSceneRenderer::DrawRocks()
+{
+	auto context = m_deviceResources->GetD3DDeviceContext();
+	UINT stride = 0;
+	UINT offset = 0;
+	//update dir_buffer
+	context->UpdateSubresource1(
+		m_DirBuffer_rock.Get(),
+		0,
+		NULL,
+		&m_dirLight_rock,
+		0,
+		0,
+		0
+	);
+	//update point_buffer
+	context->UpdateSubresource1(
+		m_PointBuffer_rock.Get(),
+		0,
+		NULL,
+		&m_pointLight_rock,
+		0,
+		0,
+		0
+	);
+	//update spot_buffer
+	context->UpdateSubresource1(
+		m_SpotBuffer_rock.Get(),
+		0,
+		NULL,
+		&m_spotLight_rock,
+		0,
+		0,
+		0
+	);
+	context->UpdateSubresource1(
+		m_constantInstanceBuffer_rock.Get(),
+		0,
+		NULL,
+		&m_instancing_rock,
+		0,
+		0,
+		0
+	);
+	stride = sizeof(VertexPositionUVNORMAL);
+	context->IASetVertexBuffers(
+		0,
+		1,
+		m_vertexBuffer_rock.GetAddressOf(),
+		&stride,
+		&offset
+	);
+
+	context->IASetIndexBuffer(
+		m_indexBuffer_rock.Get(),
+		DXGI_FORMAT_R32_UINT,
+		0
+	);
+
+	context->IASetInputLayout(m_inputLayout_objModel.Get()); //Thats fine using same layout
+
+	context->IASetPrimitiveTopology(D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST);
+
+
+	context->VSSetShader(
+		m_vertexShader_rock.Get(),
+		nullptr,
+		0
+	); //Thats fine using same shader as floor for instancing
+	context->PSSetShader(
+		m_pixelShader_objModel.Get(),
+		nullptr,
+		0
+	); //Thats fine using same shader
+
+	context->VSSetConstantBuffers1(
+		1,
+		1,
+		m_constantInstanceBuffer_rock.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_constantBuffer_rock.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	//Set lighting buffers
+	context->PSSetConstantBuffers1(
+		0,
+		1,
+		m_DirBuffer_rock.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		1,
+		1,
+		m_PointBuffer_rock.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetConstantBuffers1(
+		2,
+		1,
+		m_SpotBuffer_rock.GetAddressOf(),
+		nullptr,
+		nullptr
+	);
+	context->PSSetShaderResources(0, 1, rockView.GetAddressOf());
+	context->PSSetSamplers(0, 1, vendingMachineSampler.GetAddressOf()); //thats fine using same sampler
+
+	context->DrawIndexedInstanced(
+		m_indexCount_rock,
+		64,
+		0,
+		0,
+		0
+	);
+}
+
 
 void Sample3DSceneRenderer::MoveSpaceShip(DX::StepTimer const& timer)
 {
@@ -4193,7 +4528,7 @@ void Sample3DSceneRenderer::MoveSpaceShip(DX::StepTimer const& timer)
 
 	if (shipRotate == false)
 	{
-		XMStoreFloat4x4(&m_constantBufferData_ship.model, XMMatrixTranspose(XMMatrixScaling(7.0f, 7.0f, 7.0f)*XMMatrixRotationY(-radians)*XMMatrixTranslation(-4.0f, -4.0f, -7.5f)));
+		XMStoreFloat4x4(&m_constantBufferData_ship.model, XMMatrixTranspose(XMMatrixScaling(7.0f, 7.0f, 7.0f)*XMMatrixRotationY(-radians)*XMMatrixTranslation(-11.0f, -3.5f, -8.5f)));
 		if (radians > 1.4f)
 		{
 			shipRotate = true;
@@ -4203,7 +4538,7 @@ void Sample3DSceneRenderer::MoveSpaceShip(DX::StepTimer const& timer)
 	if (shipRotate == true && shipUp == false)
 	{
 	
-		XMStoreFloat4x4(&m_constantBufferData_ship.model, XMMatrixTranspose(XMMatrixScaling(7.0f, 7.0f, 7.0f)*XMMatrixRotationY(radians2)*XMMatrixTranslation(-4.0f, -5.5f+radians, -7.5f)));
+		XMStoreFloat4x4(&m_constantBufferData_ship.model, XMMatrixTranspose(XMMatrixScaling(7.0f, 7.0f, 7.0f)*XMMatrixRotationY(radians2)*XMMatrixTranslation(-11.0f, -5.0f+radians, -8.5f)));
 		if (radians > 2.0f)
 		{
 			shipUp = true;
@@ -4212,7 +4547,7 @@ void Sample3DSceneRenderer::MoveSpaceShip(DX::StepTimer const& timer)
 	if (shipForward == false && shipRotate == true && shipUp == true)
 	{
 		shipMove += 0.1f;
-		XMStoreFloat4x4(&m_constantBufferData_ship.model, XMMatrixTranspose(XMMatrixScaling(7.0f, 7.0f, 7.0f)*XMMatrixRotationY(radians2)*XMMatrixTranslation(-4.0f - shipMove, -5.5f + radians3, -7.5f)));
+		XMStoreFloat4x4(&m_constantBufferData_ship.model, XMMatrixTranspose(XMMatrixScaling(7.0f, 7.0f, 7.0f)*XMMatrixRotationY(radians2)*XMMatrixTranslation(-11.0f - shipMove, -5.0f + radians3, -8.5f)));
 		
 	}
 }
@@ -4277,9 +4612,10 @@ void Sample3DSceneRenderer::ResetObjectsNonTranparent()
 void Sample3DSceneRenderer::SortTranparentObjectsAndDrawThem()
 {
 	float cubeDis, pyDis, py2Dis;
-	cubeDis = m_constantBufferData.model._34 - m_constantBufferData_drone.model._34;
-	pyDis = m_constantBufferData_Pyramid.model._34 - m_constantBufferData_drone.model._34;
-	py2Dis = m_constantBufferData_Pyramid2.model._34 - m_constantBufferData_drone.model._34;
+	cubeDis = (m_constantBufferData.model._34 * m_constantBufferData.view._34) - (m_constantBufferData_drone.model._34 * m_constantBufferData_drone.view._34);
+	pyDis = (m_constantBufferData_Pyramid.model._34 * m_constantBufferData_Pyramid.view._34) - (m_constantBufferData_drone.model._34 * m_constantBufferData_drone.view._34);
+	py2Dis = (m_constantBufferData_Pyramid2.model._34 * m_constantBufferData_Pyramid2.view._34) - (m_constantBufferData_drone.model._34 * m_constantBufferData_drone.view._34);
+
 	if (cubeDis < 0.0f)
 	{
 		cubeDis = cubeDis * -1;

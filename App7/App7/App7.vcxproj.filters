@@ -157,6 +157,12 @@
     <None Include="Assets\dragonplanet.dds">
       <Filter>Assets\Textures</Filter>
     </None>
+    <None Include="Assets\asteroid.obj">
+      <Filter>Assets\Models</Filter>
+    </None>
+    <None Include="Assets\rock.dds">
+      <Filter>Assets\Textures</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <FxCompile Include="Content\VertexShaderPosUVNormal.hlsl">

@@ -65,6 +65,8 @@ namespace App7
 
 		void DrawPlanet();
 
+		void DrawRocks();
+
 		void MoveSpaceShip(DX::StepTimer const& timer);
 
 		void ResetObjectsBack2Camera1();
@@ -96,6 +98,7 @@ namespace App7
 		uint32	m_indexCount;
 
 
+
 		// Variables used with the rendering loop.
 		bool	m_loadingComplete;
 		float	m_degreesPerSecond;
@@ -111,6 +114,9 @@ namespace App7
 		bool LightON = true;
 		bool ToggleLight = true;
 
+		float red = 1.0f;
+		float green = 1.0f;
+		float blue = 1.0f;
 
 		//Tranparent
 		Microsoft::WRL::ComPtr<ID3D11BlendState> blendState;
@@ -361,6 +367,27 @@ namespace App7
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_DirBuffer_planet;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_PointBuffer_planet;
 		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_SpotBuffer_planet;
+
+
+		//rocks
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_vertexBuffer_rock;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_indexBuffer_rock;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_constantBuffer_rock;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>        m_constantInstanceBuffer_rock;
+		Instancing m_instancing_rock;
+		Microsoft::WRL::ComPtr<ID3D11VertexShader>	m_vertexShader_rock;
+		ModelViewProjectionConstantBuffer m_constantBufferData_rock;
+		uint32 m_indexCount_rock;
+
+		Microsoft::WRL::ComPtr<ID3D11Texture2D> rockTexture;
+		Microsoft::WRL::ComPtr<ID3D11ShaderResourceView> rockView;
+		dir_light m_dirLight_rock;
+		point_light m_pointLight_rock;
+		spot_light m_spotLight_rock;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_DirBuffer_rock;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_PointBuffer_rock;
+		Microsoft::WRL::ComPtr<ID3D11Buffer>		m_SpotBuffer_rock;
+
 
 	};
 }

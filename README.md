@@ -2,7 +2,18 @@
 
 SpotLight Controls:
 F- turns off spotlight
-G- turns on spotlight
+C- turns on spotlight + Reset color to white
+R- hold to reduce the amount of red in spotlight
+G- hold to reduce the amount of green in spotlight
+B- hold to reduce the amount of blue in spotlight
+
+Planet with asteroids around it:
+1.When you start fly left a bit until you see the space station behind you.
+2.Staying at the distance away from the station, move until you are in the middle of the station
+3.Turn around an fly straight until you find the planet/asteroids
+
+-Note: if you just started the application. If you fly left outside you may find a spaceship on the station, which lifts off and flys towards the planet.
+
 
 Render-to-Texture:
 -Renders the alien/vending machine room onto a screen in another room
@@ -22,6 +33,7 @@ directional light:
 -space station
 -space ship
 -barrel
+-planet
 
 Spotlight:
 -floor
@@ -30,6 +42,8 @@ Spotlight:
 -space ship
 -vending machine
 -barrel
+-planet
+-asteroids
 
 Transparent:
 -cube
